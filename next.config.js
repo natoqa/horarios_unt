@@ -1,0 +1,13 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    reactStrictMode: true,
+    images: {
+      domains: ['localhost'],
+    },
+    experimental: {
+      serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+    },
+  }
+  
+  module.exports = nextConfig
+  

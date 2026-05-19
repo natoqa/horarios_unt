@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CategoriaDocente {
+  PRINCIPAL
+  ASOCIADO
+  AUXILIAR
+  JEFE_PRACTICA
+}
+
+enum TipoDocente {
+  NOMBRADO
+  CONTRATADO
+}
+
+enum TipoAmbiente {
+  AULA
+  LABORATORIO
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+}
+
+enum EstadoHorario {
+  ACTIVO
+  INACTIVO
+  TEMPORAL
+}
+
+enum RolUsuario {
+  ADMINISTRADOR
+  DOCENTE
+  COORDINADOR
+}
+
+model Usuario {
+  id             String      @id @default(cuid())
+  correo         String      @unique
+  contrasena     String
+  nombre         String
+  apellidos      String
+  rol            RolUsuario  @default(ADMINISTRADOR)
+  activo         Boolean     @default(true)
+  creado_en      DateTime    @default(now())
+  actualizado_en DateTime    @updatedAt
+
+  docente        Docente?
+  sesiones       Sesion[]
+  auditorias     AuditoriaCambio[]
+}
+
+model Sesion {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  usuario_id String
+  expira_en  DateTime
+  creado_en  DateTime @default(now())
+
+  usuario    Usuario  @relation(fields: [usuario_id], references: [id])
+}
+
+model Docente {
+  id                String              @id @default(cuid())
+  codigo            String              @unique
+  nombres           String
+  apellidos         String
+  correo            String              @unique
+  telefono          String?
+  escuela           String              @default("Ingeniería de Sistemas")
+  categoria         CategoriaDocente
+  tipo              TipoDocente
+  antiguedad        Int                 @default(0)
+  activo            Boolean             @default(true)
+  usuario_id        String?             @unique
+  creado_en         DateTime            @default(now())
+  actualizado_en    DateTime            @updatedAt
+
+  usuario           Usuario?            @relation(fields: [usuario_id], references: [id])
+  disponibilidades  DisponibilidadDocente[]
+  cursos_asignados  CursoDocente[]
+  horarios          Horario[]
+}
+
+model Curso {
+  id                 String              @id @default(cuid())
+  codigo             String              @unique
+  nombre             String
+  creditos           Int
+  horas_teoria       Int
+  horas_laboratorio  Int
+  horas_practica     Int                 @default(0)
+  ciclo              Int
+  plan_estudios      String              @default("2018")
+  activo             Boolean             @default(true)
+  creado_en          DateTime            @default(now())
+  actualizado_en     DateTime            @updatedAt
+
+  docentes           CursoDocente[]
+  horarios           Horario[]
+  prerrequisitos     PrerrequisitoCurso[]   @relation("CursoPrerrequisito")
+  es_prerrequisito   PrerrequisitoCurso[]   @relation("CursoPrincipal")
+}
+
+model PrerrequisitoCurso {
+  id                String    @id @default(cuid())
+  curso_id          String
+  prerrequisito_id  String
+  creado_en         DateTime  @default(now())
+
+  curso             Curso     @relation("CursoPrincipal", fields: [curso_id], references: [id])
+  prerrequisito     Curso     @relation("CursoPrerrequisito", fields: [prerrequisito_id], references: [id])
+
+  @@unique([curso_id, prerrequisito_id])
+}
+
+model Ambiente {
+  id                  String      @id @default(cuid())
+  codigo              String      @unique
+  nombre              String
+  tipo                TipoAmbiente
+  capacidad           Int
+  ubicacion           String?
+  piso                Int?
+  tiene_proyector     Boolean     @default(false)
+  tiene_computadoras  Boolean     @default(false)
+  activo              Boolean     @default(true)
+  creado_en           DateTime    @default(now())
+  actualizado_en      DateTime    @updatedAt
+
+  horarios            Horario[]
+  mantenimientos      MantenimientoAmbiente[]
+}
+
+model MantenimientoAmbiente {
+  id           String    @id @default(cuid())
+  ambiente_id  String
+  fecha_inicio DateTime
+  fecha_fin    DateTime
+  descripcion  String
+  creado_en    DateTime  @default(now())
+
+  ambiente     Ambiente  @relation(fields: [ambiente_id], references: [id])
+}
+
+model CursoDocente {
+  id          String    @id @default(cuid())
+  curso_id    String
+  docente_id  String
+  es_titular  Boolean   @default(true)
+  creado_en   DateTime  @default(now())
+
+  curso       Curso     @relation(fields: [curso_id], references: [id])
+  docente     Docente   @relation(fields: [docente_id], references: [id])
+
+  @@unique([curso_id, docente_id])
+}
+
+model DisponibilidadDocente {
+  id          String    @id @default(cuid())
+  docente_id  String
+  dia         DiaSemana
+  hora_inicio String
+  hora_fin    String
+  creado_en   DateTime  @default(now())
+
+  docente     Docente   @relation(fields: [docente_id], references: [id])
+
+  @@unique([docente_id, dia, hora_inicio])
+}
+
+model Horario {
+  id              String        @id @default(cuid())
+  curso_id        String
+  docente_id      String
+  ambiente_id     String
+  dia             DiaSemana
+  hora_inicio     String
+  hora_fin        String
+  tipo            TipoAmbiente
+  estado          EstadoHorario @default(ACTIVO)
+  ciclo_academico String        @default("2024-I")
+  creado_en       DateTime      @default(now())
+  actualizado_en  DateTime      @updatedAt
+
+  curso           Curso         @relation(fields: [curso_id], references: [id])
+  docente         Docente       @relation(fields: [docente_id], references: [id])
+  ambiente        Ambiente      @relation(fields: [ambiente_id], references: [id])
+
+  @@unique([ambiente_id, dia, hora_inicio, ciclo_academico])
+  @@unique([docente_id, dia, hora_inicio, ciclo_academico])
+  @@index([ciclo_academico])
+}
+
+model ConfiguracionSistema {
+  id              String    @id @default(cuid())
+  clave           String    @unique
+  valor           String
+  descripcion     String?
+  actualizado_en  DateTime  @updatedAt
+}
+
+model AuditoriaCambio {
+  id          String    @id @default(cuid())
+  usuario_id  String
+  accion      String
+  entidad     String
+  entidad_id  String
+  cambios     Json
+  creado_en   DateTime  @default(now())
+
+  usuario     Usuario   @relation(fields: [usuario_id], references: [id])
+}

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx prisma generate)",
+      "PowerShell(npx prisma db push)",
+      "PowerShell(npm run *)",
+      "PowerShell(npx prisma db seed)",
+      "WebSearch",
+      "PowerShell(pip install *)",
+      "PowerShell(python -m pip install pymupdf 2>$null)",
+      "PowerShell(npx prisma generate 2>&1)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(curl -s -o $null -w \"%{http_code}\" http://localhost:3000/docentes 2>&1)",
+      "WebFetch(domain:facing.unitru.edu.pe)",
+      "WebFetch(domain:transparencia.unitru.edu.pe)",
+      "WebFetch(domain:unitru.edu.pe)",
+      "WebFetch(domain:www.unitru.edu.pe)",
+      "PowerShell(npx tsx prisma/seed-docentes.ts 2>&1)",
+      "PowerShell(npx tsx prisma/delete-docente.ts 2>&1)",
+      "PowerShell(git init *)"
+    ]
+  }
+}
