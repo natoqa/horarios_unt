@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { trpc } from '@/lib/trpc'
-import { CICLOS_ACADEMICOS } from '@/lib/constants'
+import { CICLOS_ACADEMICOS, CICLO_ACADEMICO_DEFAULT, getCiclosCursoPorPeriodo } from '@/lib/constants'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Zap } from 'lucide-react'
+import { ArrowLeft, Zap, Info } from 'lucide-react'
 
 export default function GenerarHorariosPage() {
-  const [ciclo, setCiclo] = useState('2024-I')
+  const [ciclo, setCiclo] = useState(CICLO_ACADEMICO_DEFAULT)
   const [forzar, setForzar] = useState(false)
   const [resultado, setResultado] = useState<{
     total: number
@@ -42,7 +42,7 @@ export default function GenerarHorariosPage() {
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Generación automática</h1>
           <p className="text-gray-500 mt-1">
-            Algoritmo por prioridad: nombrados → contratados, por categoría y antigüedad
+            Algoritmo inteligente con bloques consecutivos y validacion de conflictos
           </p>
         </header>
 
@@ -64,13 +64,26 @@ export default function GenerarHorariosPage() {
               </select>
             </label>
 
+            <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+              <p className="text-xs font-medium text-blue-800 flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 shrink-0" />
+                Ciclos a generar: {getCiclosCursoPorPeriodo(ciclo).map(c => {
+                  const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X']
+                  return roman[c - 1]
+                }).join(', ')}
+              </p>
+              <p className="text-[11px] text-blue-600 mt-0.5 ml-5">
+                {ciclo.endsWith('-I') ? 'Periodo I = ciclos impares' : ciclo.endsWith('-II') ? 'Periodo II = ciclos pares' : 'Nivelacion = todos los ciclos'}
+              </p>
+            </div>
+
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={forzar}
                 onChange={(e) => setForzar(e.target.checked)}
               />
-              Forzar regeneración (elimina horarios existentes del ciclo)
+              Forzar regeneracion (elimina horarios existentes del ciclo)
             </label>
 
             <Button
@@ -93,6 +106,41 @@ export default function GenerarHorariosPage() {
           </CardContent>
         </Card>
 
+        {/* Info del algoritmo */}
+        <Card className="mt-6 max-w-xl">
+          <CardHeader>
+            <CardTitle className="text-sm">Caracteristicas del algoritmo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="text-xs text-gray-600 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                Prioridad: nombrados antes que contratados, por categoria y antiguedad
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                Bloques consecutivos: 4h de teoria = 2 bloques de 2h en dias diferentes
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                Anti-colision por ciclo: cursos del mismo ciclo no se solapan
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                Limite de 4h consecutivas por docente sin descanso
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                Respeta disponibilidad docente y hora de almuerzo (13:00-14:00)
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                Fallback: si no hay bloque consecutivo, asigna horas sueltas con advertencia
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
         {resultado && (
           <Card className="mt-6 max-w-xl">
             <CardHeader>
@@ -101,18 +149,27 @@ export default function GenerarHorariosPage() {
             <CardContent className="space-y-2 text-sm">
               <p className="font-medium text-green-700">Asignaciones creadas: {resultado.total}</p>
               {resultado.conflictos.length > 0 && (
-                <ul className="list-disc pl-5 text-red-600">
-                  {resultado.conflictos.map((c, i) => (
-                    <li key={i}>{c}</li>
-                  ))}
-                </ul>
+                <div>
+                  <p className="font-medium text-red-700 mb-1">Conflictos ({resultado.conflictos.length})</p>
+                  <ul className="list-disc pl-5 text-red-600 space-y-0.5">
+                    {resultado.conflictos.map((c, i) => (
+                      <li key={i}>{c}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
               {resultado.advertencias.length > 0 && (
-                <ul className="list-disc pl-5 text-amber-600">
-                  {resultado.advertencias.map((a, i) => (
-                    <li key={i}>{a}</li>
-                  ))}
-                </ul>
+                <div>
+                  <p className="font-medium text-amber-700 mb-1">Advertencias ({resultado.advertencias.length})</p>
+                  <ul className="list-disc pl-5 text-amber-600 space-y-0.5">
+                    {resultado.advertencias.map((a, i) => (
+                      <li key={i}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {resultado.conflictos.length === 0 && resultado.advertencias.length === 0 && (
+                <p className="text-green-600">Sin conflictos ni advertencias.</p>
               )}
             </CardContent>
           </Card>

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CategoriaDocente, TipoDocente, DiaSemana, TipoAmbiente } from '@/lib/prisma-types'
+import { CICLO_ACADEMICO_DEFAULT } from '@/lib/constants'
 
 export const docenteSchema = z.object({
   codigo: z.string().min(1, 'El código es requerido').max(20, 'Máximo 20 caracteres'),
@@ -21,6 +22,7 @@ export const cursoSchema = z.object({
   horas_laboratorio: z.number().min(0).max(40),
   horas_practica: z.number().min(0).max(40),
   ciclo: z.number().min(1).max(10),
+  departamento: z.string().min(1).max(100).default('Ingeniería de Sistemas'),
   plan_estudios: z.string().default('2018'),
 })
 
@@ -41,7 +43,7 @@ export const horarioSchema = z.object({
   hora_inicio: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato HH:mm requerido'),
   hora_fin: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato HH:mm requerido'),
   tipo: z.nativeEnum(TipoAmbiente),
-  ciclo_academico: z.string().default('2024-I'),
+  ciclo_academico: z.string().default(CICLO_ACADEMICO_DEFAULT),
 })
 
 export const loginSchema = z.object({

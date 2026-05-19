@@ -102,6 +102,7 @@ model Curso {
   horas_laboratorio  Int
   horas_practica     Int                 @default(0)
   ciclo              Int
+  departamento       String              @default("Ingeniería de Sistemas")
   plan_estudios      String              @default("2018")
   activo             Boolean             @default(true)
   creado_en          DateTime            @default(now())
@@ -190,7 +191,7 @@ model Horario {
   hora_fin        String
   tipo            TipoAmbiente
   estado          EstadoHorario @default(ACTIVO)
-  ciclo_academico String        @default("2024-I")
+  ciclo_academico String        @default("2026-I")
   creado_en       DateTime      @default(now())
   actualizado_en  DateTime      @updatedAt
 
@@ -198,8 +199,8 @@ model Horario {
   docente         Docente       @relation(fields: [docente_id], references: [id])
   ambiente        Ambiente      @relation(fields: [ambiente_id], references: [id])
 
-  @@unique([ambiente_id, dia, hora_inicio, ciclo_academico])
-  @@unique([docente_id, dia, hora_inicio, ciclo_academico])
+  @@index([ambiente_id, dia, ciclo_academico])
+  @@index([docente_id, dia, ciclo_academico])
   @@index([ciclo_academico])
 }
 

@@ -10,7 +10,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { trpc } from '@/lib/trpc'
 import { CATEGORIAS_DOCENTE, TIPOS_DOCENTE, ESCUELAS } from '@/lib/constants'
 import toast from 'react-hot-toast'
-import { Plus, Search, Users, Mail, Clock, Trash2, ShieldCheck, FileSignature, ChevronDown, GraduationCap } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, Search, Users, Mail, Clock, Trash2, ShieldCheck, FileSignature, ChevronDown, GraduationCap, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tipoConfig = {
@@ -233,25 +234,35 @@ export default function DocentesPage() {
                   {!collapsed.has(escuela) && <div className="divide-y divide-gray-50">
                     {items.map((d) => {
                       const tipoC = tipoConfig[d.tipo as keyof typeof tipoConfig]
+                      const numCursos = d.cursos_asignados?.length ?? 0
                       return (
                         <div key={d.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors group">
-                          {/* Avatar */}
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shrink-0">
+                          {/* Avatar - clickeable */}
+                          <Link href={`/docentes/${d.id}`} className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shrink-0">
                             <span className="text-[11px] font-bold text-white">
                               {d.nombres[0]}{d.apellidos[0]}
                             </span>
-                          </div>
+                          </Link>
 
-                          {/* Nombre + correo */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                          {/* Nombre + correo - clickeable */}
+                          <Link href={`/docentes/${d.id}`} className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate hover:text-primary-600 transition-colors">
                               {d.apellidos}, {d.nombres}
                             </p>
-                            <div className="hidden sm:flex items-center gap-1 mt-0.5">
-                              <Mail className="h-3 w-3 text-gray-400" />
-                              <span className="text-xs text-gray-400 truncate">{d.correo}</span>
+                            <div className="hidden sm:flex items-center gap-2 mt-0.5">
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3 text-gray-400" />
+                                <span className="text-xs text-gray-400 truncate">{d.correo}</span>
+                              </span>
+                              <span className={cn(
+                                'flex items-center gap-1 text-xs',
+                                numCursos > 0 ? 'text-green-600' : 'text-amber-500'
+                              )}>
+                                <BookOpen className="h-3 w-3" />
+                                {numCursos} {numCursos === 1 ? 'curso' : 'cursos'}
+                              </span>
                             </div>
-                          </div>
+                          </Link>
 
                           {/* Código */}
                           <span className="hidden md:block text-xs font-mono font-semibold text-gray-400 shrink-0">

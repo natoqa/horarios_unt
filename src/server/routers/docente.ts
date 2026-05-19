@@ -150,17 +150,29 @@ export const docenteRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.prisma.disponibilidadDocente.deleteMany({
-        where: { docente_id: input.docente_id },
+      await ctx.prisma.$transaction(async (tx) => {
+        await tx.disponibilidadDocente.deleteMany({
+          where: { docente_id: input.docente_id },
+        })
+
+        await tx.disponibilidadDocente.createMany({
+          data: input.disponibilidades.map(d => ({
+            docente_id: input.docente_id,
+            dia: d.dia as any,
+            hora_inicio: d.hora_inicio,
+            hora_fin: d.hora_fin,
+          })),
+        })
       })
 
-      await ctx.prisma.disponibilidadDocente.createMany({
-        data: input.disponibilidades.map(d => ({
-          docente_id: input.docente_id,
-          dia: d.dia as any,
-          hora_inicio: d.hora_inicio,
-          hora_fin: d.hora_fin,
-        })),
+      await ctx.prisma.auditoriaCambio.create({
+        data: {
+          usuario_id: getUserId(ctx),
+          accion: 'ACTUALIZAR',
+          entidad: 'DisponibilidadDocente',
+          entidad_id: input.docente_id,
+          cambios: { total: input.disponibilidades.length } as any,
+        },
       })
 
       return { mensaje: 'Disponibilidad actualizada exitosamente' }
@@ -174,15 +186,27 @@ export const docenteRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.prisma.cursoDocente.deleteMany({
-        where: { docente_id: input.docente_id },
+      await ctx.prisma.$transaction(async (tx) => {
+        await tx.cursoDocente.deleteMany({
+          where: { docente_id: input.docente_id },
+        })
+
+        await tx.cursoDocente.createMany({
+          data: input.cursos_ids.map(cursoId => ({
+            docente_id: input.docente_id,
+            curso_id: cursoId,
+          })),
+        })
       })
 
-      await ctx.prisma.cursoDocente.createMany({
-        data: input.cursos_ids.map(cursoId => ({
-          docente_id: input.docente_id,
-          curso_id: cursoId,
-        })),
+      await ctx.prisma.auditoriaCambio.create({
+        data: {
+          usuario_id: getUserId(ctx),
+          accion: 'ASIGNAR_CURSOS',
+          entidad: 'CursoDocente',
+          entidad_id: input.docente_id,
+          cambios: { cursos: input.cursos_ids } as any,
+        },
       })
 
       return { mensaje: 'Cursos asignados exitosamente' }

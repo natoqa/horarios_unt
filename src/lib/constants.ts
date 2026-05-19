@@ -35,20 +35,47 @@ export const DIAS_SEMANA = [
     { value: 'Física', label: 'Física' },
     { value: 'Informática', label: 'Informática' },
   ]
+
+  export const DEPARTAMENTOS_CURSO = [
+    { value: 'Ingeniería de Sistemas', label: 'Ingeniería de Sistemas (carrera)' },
+    { value: 'Matemáticas', label: 'Matemáticas' },
+    { value: 'Estadística', label: 'Estadística' },
+    { value: 'Física', label: 'Física' },
+    { value: 'Economía', label: 'Economía' },
+    { value: 'Contabilidad y Finanzas', label: 'Contabilidad y Finanzas' },
+    { value: 'Ciencias Ambientales', label: 'Ciencias Ambientales' },
+    { value: 'Ciencias Sociales', label: 'Ciencias Sociales' },
+    { value: 'Idiomas', label: 'Idiomas' },
+  ]
   
-  /** Ciclos académicos ordenados cronológicamente (año → periodo) */
   export const CICLOS_ACADEMICOS = [
-    '2024-I',
-    '2024-II',
-    '2024-Nivelación',
-    '2025-I',
-    '2025-II',
-    '2025-Nivelación',
     '2026-I',
-    '2026-Nivelación',
+    '2026-II',
+    '2026-Nivelacion',
+    '2027-I',
+    '2027-II',
+    '2027-Nivelacion',
+    '2028-I',
+    '2028-II',
   ] as const
 
-  export const CICLO_ACADEMICO_DEFAULT = CICLOS_ACADEMICOS[0]
+  export const CICLO_ACADEMICO_DEFAULT = '2026-I'
+
+  /**
+   * En la UNT, el periodo I (primer semestre) dicta ciclos impares (1,3,5,7,9)
+   * y el periodo II dicta ciclos pares (2,4,6,8,10).
+   * Nivelacion puede incluir cualquier ciclo.
+   */
+  export function getCiclosCursoPorPeriodo(cicloAcademico: string): number[] {
+    if (cicloAcademico.endsWith('-I')) {
+      return [1, 3, 5, 7, 9]
+    }
+    if (cicloAcademico.endsWith('-II')) {
+      return [2, 4, 6, 8, 10]
+    }
+    // Nivelacion: todos los ciclos
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  }
   
   export const ESTADOS_HORARIO = [
     { value: 'ACTIVO', label: 'Activo' },

@@ -8,6 +8,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
 import { trpc } from '@/lib/trpc'
 import toast from 'react-hot-toast'
+import { Select } from '@/components/ui/Select'
+import { DEPARTAMENTOS_CURSO } from '@/lib/constants'
 import { Plus, BookOpen, Clock, FlaskConical, GraduationCap, Trash2, Search, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -51,6 +53,7 @@ export default function CursosPage() {
     horas_laboratorio: 2,
     horas_practica: 0,
     ciclo: 1,
+    departamento: 'Ingeniería de Sistemas',
     plan_estudios: '2018',
   })
 
@@ -61,7 +64,7 @@ export default function CursosPage() {
       toast.success('Curso registrado')
       utils.curso.getAll.invalidate()
       setModalOpen(false)
-      setForm({ codigo: '', nombre: '', creditos: 3, horas_teoria: 2, horas_laboratorio: 2, horas_practica: 0, ciclo: 1, plan_estudios: '2018' })
+      setForm({ codigo: '', nombre: '', creditos: 3, horas_teoria: 2, horas_laboratorio: 2, horas_practica: 0, ciclo: 1, departamento: 'Ingeniería de Sistemas', plan_estudios: '2018' })
     },
     onError: (e) => toast.error(e.message),
   })
@@ -103,6 +106,7 @@ export default function CursosPage() {
       horas_laboratorio: Number(form.horas_laboratorio),
       horas_practica: Number(form.horas_practica),
       ciclo: Number(form.ciclo),
+      departamento: form.departamento,
     })
   }
 
@@ -194,10 +198,17 @@ export default function CursosPage() {
                           {c.codigo}
                         </span>
 
-                        {/* Nombre */}
-                        <span className="flex-1 text-sm font-medium text-gray-900 min-w-0 truncate">
-                          {c.nombre}
-                        </span>
+                        {/* Nombre + Departamento */}
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-gray-900 truncate block">
+                            {c.nombre}
+                          </span>
+                          {(c as any).departamento && (c as any).departamento !== 'Ingeniería de Sistemas' && (
+                            <span className="text-[10px] text-amber-600 font-medium">
+                              {(c as any).departamento}
+                            </span>
+                          )}
+                        </div>
 
                         {/* Tags de horas */}
                         <div className="hidden sm:flex items-center gap-2">
@@ -250,6 +261,7 @@ export default function CursosPage() {
               <Input label="H. Teoría" type="number" value={form.horas_teoria} onChange={(e) => setForm({ ...form, horas_teoria: Number(e.target.value) })} required />
               <Input label="H. Laboratorio" type="number" value={form.horas_laboratorio} onChange={(e) => setForm({ ...form, horas_laboratorio: Number(e.target.value) })} required />
               <Input label="H. Práctica" type="number" value={form.horas_practica} onChange={(e) => setForm({ ...form, horas_practica: Number(e.target.value) })} />
+              <Select label="Departamento" value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value })} options={DEPARTAMENTOS_CURSO} />
               <Input label="Plan de estudios" value={form.plan_estudios} onChange={(e) => setForm({ ...form, plan_estudios: e.target.value })} />
             </fieldset>
             <div className="flex justify-end gap-2 pt-2">

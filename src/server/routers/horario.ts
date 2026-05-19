@@ -4,6 +4,7 @@ import { horarioSchema } from '@/lib/validators'
 import { TRPCError } from '@trpc/server'
 import { HorarioGenerator } from '../services/horarioGenerator'
 import { ValidationService } from '../services/validationService'
+import { CICLOS_ACADEMICOS } from '@/lib/constants'
 
 export const horarioRouter = router({
   getAll: protectedProcedure
@@ -65,6 +66,16 @@ export const horarioRouter = router({
 
       const horario = await ctx.prisma.horario.create({ data: input })
 
+      await ctx.prisma.auditoriaCambio.create({
+        data: {
+          usuario_id: getUserId(ctx),
+          accion: 'CREAR',
+          entidad: 'Horario',
+          entidad_id: horario.id,
+          cambios: input as any,
+        },
+      })
+
       return {
         horario,
         advertencias: resultado.advertencias,
@@ -79,10 +90,50 @@ export const horarioRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.horario.update({
+      const actual = await ctx.prisma.horario.findUnique({ where: { id: input.id } })
+      if (!actual) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Horario no encontrado' })
+      }
+
+      const datosCompletos = { ...actual, ...input.data }
+      const validationService = new ValidationService(ctx.prisma)
+      const resultado = await validationService.validarHorarioCompleto(
+        {
+          curso_id: datosCompletos.curso_id,
+          docente_id: datosCompletos.docente_id,
+          ambiente_id: datosCompletos.ambiente_id,
+          dia: datosCompletos.dia,
+          hora_inicio: datosCompletos.hora_inicio,
+          hora_fin: datosCompletos.hora_fin,
+          tipo: datosCompletos.tipo,
+          ciclo_academico: datosCompletos.ciclo_academico,
+        },
+        input.id
+      )
+
+      if (!resultado.valido) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: resultado.errores.join('. '),
+        })
+      }
+
+      const horario = await ctx.prisma.horario.update({
         where: { id: input.id },
         data: input.data,
       })
+
+      await ctx.prisma.auditoriaCambio.create({
+        data: {
+          usuario_id: getUserId(ctx),
+          accion: 'ACTUALIZAR',
+          entidad: 'Horario',
+          entidad_id: horario.id,
+          cambios: input.data as any,
+        },
+      })
+
+      return { horario, advertencias: resultado.advertencias }
     }),
 
   delete: adminProcedure
@@ -93,51 +144,64 @@ export const horarioRouter = router({
         data: { estado: 'INACTIVO' },
       })
 
+      await ctx.prisma.auditoriaCambio.create({
+        data: {
+          usuario_id: getUserId(ctx),
+          accion: 'ELIMINAR',
+          entidad: 'Horario',
+          entidad_id: input,
+          cambios: { estado: 'INACTIVO' },
+        },
+      })
+
       return { mensaje: 'Horario eliminado exitosamente' }
     }),
 
   generarHorarios: adminProcedure
     .input(
       z.object({
-        ciclo: z.string().default('2024-I'),
+        ciclo: z.string().default(CICLOS_ACADEMICOS[0]),
         forzar: z.boolean().default(false),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Eliminar horarios existentes si se fuerza
-      if (input.forzar) {
-        await ctx.prisma.horario.deleteMany({
-          where: { ciclo_academico: input.ciclo },
-        })
-      }
-
       const generator = new HorarioGenerator(ctx.prisma)
-      const resultado = await generator.generarHorario(input.ciclo)
+      const resultado = await generator.generarHorario(input.ciclo, input.forzar)
 
-      // Guardar asignaciones
-      const horarios = []
-      for (const asignacion of resultado.asignaciones) {
-        const horario = await ctx.prisma.horario.create({
+      const horarios = await ctx.prisma.$transaction(async (tx) => {
+        if (input.forzar) {
+          await tx.horario.deleteMany({
+            where: { ciclo_academico: input.ciclo },
+          })
+        }
+
+        const creados = []
+        for (const asignacion of resultado.asignaciones) {
+          const horario = await tx.horario.create({
+            data: {
+              ...asignacion,
+              ciclo_academico: input.ciclo,
+            },
+          })
+          creados.push(horario)
+        }
+
+        await tx.auditoriaCambio.create({
           data: {
-            ...asignacion,
-            ciclo_academico: input.ciclo,
+            usuario_id: getUserId(ctx),
+            accion: 'GENERAR_HORARIOS',
+            entidad: 'Horario',
+            entidad_id: input.ciclo,
+            cambios: {
+              total: creados.length,
+              ciclo: input.ciclo,
+              conflictos: resultado.conflictos.length,
+              advertencias: resultado.advertencias.length,
+            },
           },
         })
-        horarios.push(horario)
-      }
 
-      await ctx.prisma.auditoriaCambio.create({
-        data: {
-          usuario_id: getUserId(ctx),
-          accion: 'GENERAR_HORARIOS',
-          entidad: 'Horario',
-          entidad_id: input.ciclo,
-          cambios: {
-            total: horarios.length,
-            ciclo: input.ciclo,
-            conflictos: resultado.conflictos,
-          },
-        },
+        return creados
       })
 
       return {
@@ -158,21 +222,8 @@ export const horarioRouter = router({
   getConflictos: protectedProcedure
     .input(z.string().optional())
     .query(async ({ ctx, input }) => {
-      const ciclo = input || '2024-I'
-      
-      // Aquí se implementaría la lógica de detección de conflictos
-      const conflictos = await ctx.prisma.auditoriaCambio.findMany({
-        where: {
-          accion: 'CONFLICTO_DETECTADO',
-          creado_en: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // últimos 30 días
-          },
-        },
-        take: 50,
-        orderBy: { creado_en: 'desc' },
-      })
-
-      return conflictos
+      const ciclo = input || CICLOS_ACADEMICOS[0]
+      const validationService = new ValidationService(ctx.prisma)
+      return validationService.detectarConflictos(ciclo)
     }),
 })
-

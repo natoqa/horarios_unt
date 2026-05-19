@@ -1,9 +1,31 @@
 import { PrismaClient } from '@prisma/client'
+import type { DiaSemanaValor, TipoAmbienteValor } from '@/lib/prisma-types'
+
+interface HorarioInput {
+  curso_id: string
+  docente_id: string
+  ambiente_id: string
+  dia: DiaSemanaValor
+  hora_inicio: string
+  hora_fin: string
+  tipo: TipoAmbienteValor
+  ciclo_academico?: string
+}
 
 interface ValidacionResultado {
   valido: boolean
   errores: string[]
   advertencias: string[]
+}
+
+interface ConflictoDetectado {
+  tipo: 'DOCENTE' | 'AMBIENTE'
+  entidad_nombre: string
+  dia: string
+  hora_inicio: string
+  hora_fin: string
+  curso_a: string
+  curso_b: string
 }
 
 export class ValidationService {
@@ -13,16 +35,14 @@ export class ValidationService {
     this.prisma = prisma
   }
 
-  async validarHorarioCompleto(horario: any, excluirId?: string): Promise<ValidacionResultado> {
+  async validarHorarioCompleto(horario: HorarioInput, excluirId?: string): Promise<ValidacionResultado> {
     const errores: string[] = []
     const advertencias: string[] = []
 
-    // Validar formato de horas
     if (horario.hora_inicio >= horario.hora_fin) {
       errores.push('La hora de inicio debe ser menor a la hora de fin')
     }
 
-    // Validar disponibilidad del docente
     const docenteDisponible = await this.validarDisponibilidadDocente(
       horario.docente_id,
       horario.dia,
@@ -35,7 +55,6 @@ export class ValidationService {
       errores.push('El docente no está disponible en ese horario o ya tiene una clase asignada')
     }
 
-    // Validar disponibilidad del ambiente
     const ambienteDisponible = await this.validarDisponibilidadAmbiente(
       horario.ambiente_id,
       horario.dia,
@@ -48,7 +67,6 @@ export class ValidationService {
       errores.push('El ambiente no está disponible en ese horario')
     }
 
-    // Validar tipo de ambiente
     const ambiente = await this.prisma.ambiente.findUnique({
       where: { id: horario.ambiente_id },
     })
@@ -64,27 +82,84 @@ export class ValidationService {
     }
   }
 
+  async detectarConflictos(cicloAcademico: string): Promise<ConflictoDetectado[]> {
+    const conflictos: ConflictoDetectado[] = []
+
+    const horarios = await this.prisma.horario.findMany({
+      where: { ciclo_academico: cicloAcademico, estado: 'ACTIVO' },
+      include: {
+        curso: { select: { nombre: true } },
+        docente: { select: { nombres: true, apellidos: true } },
+        ambiente: { select: { nombre: true } },
+      },
+      orderBy: [{ dia: 'asc' }, { hora_inicio: 'asc' }],
+    })
+
+    for (let i = 0; i < horarios.length; i++) {
+      for (let j = i + 1; j < horarios.length; j++) {
+        const a = horarios[i]
+        const b = horarios[j]
+
+        if (a.dia !== b.dia) continue
+        const seSolapan = a.hora_inicio < b.hora_fin && a.hora_fin > b.hora_inicio
+        if (!seSolapan) continue
+
+        if (a.docente_id === b.docente_id) {
+          conflictos.push({
+            tipo: 'DOCENTE',
+            entidad_nombre: `${a.docente.nombres} ${a.docente.apellidos}`,
+            dia: a.dia,
+            hora_inicio: a.hora_inicio > b.hora_inicio ? b.hora_inicio : a.hora_inicio,
+            hora_fin: a.hora_fin > b.hora_fin ? a.hora_fin : b.hora_fin,
+            curso_a: a.curso.nombre,
+            curso_b: b.curso.nombre,
+          })
+        }
+
+        if (a.ambiente_id === b.ambiente_id) {
+          conflictos.push({
+            tipo: 'AMBIENTE',
+            entidad_nombre: a.ambiente.nombre,
+            dia: a.dia,
+            hora_inicio: a.hora_inicio > b.hora_inicio ? b.hora_inicio : a.hora_inicio,
+            hora_fin: a.hora_fin > b.hora_fin ? a.hora_fin : b.hora_fin,
+            curso_a: a.curso.nombre,
+            curso_b: b.curso.nombre,
+          })
+        }
+      }
+    }
+
+    return conflictos
+  }
+
   private async validarDisponibilidadDocente(
     docenteId: string,
-    dia: string,
+    dia: DiaSemanaValor,
     horaInicio: string,
     horaFin: string,
     excluirId?: string
   ): Promise<boolean> {
-    const disponibilidad = await this.prisma.disponibilidadDocente.findFirst({
-      where: {
-        docente_id: docenteId,
-        dia: dia as any,
-        hora_inicio: { lte: horaInicio },
-        hora_fin: { gte: horaFin },
-      },
+    const tieneDisponibilidades = await this.prisma.disponibilidadDocente.count({
+      where: { docente_id: docenteId },
     })
 
-    if (!disponibilidad) return false
+    if (tieneDisponibilidades > 0) {
+      const disponibilidad = await this.prisma.disponibilidadDocente.findFirst({
+        where: {
+          docente_id: docenteId,
+          dia: dia,
+          hora_inicio: { lte: horaInicio },
+          hora_fin: { gte: horaFin },
+        },
+      })
 
-    const whereClause: any = {
+      if (!disponibilidad) return false
+    }
+
+    const whereClause: Record<string, unknown> = {
       docente_id: docenteId,
-      dia: dia as any,
+      dia: dia,
       estado: 'ACTIVO',
       hora_inicio: { lt: horaFin },
       hora_fin: { gt: horaInicio },
@@ -101,14 +176,14 @@ export class ValidationService {
 
   private async validarDisponibilidadAmbiente(
     ambienteId: string,
-    dia: string,
+    dia: DiaSemanaValor,
     horaInicio: string,
     horaFin: string,
     excluirId?: string
   ): Promise<boolean> {
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       ambiente_id: ambienteId,
-      dia: dia as any,
+      dia: dia,
       estado: 'ACTIVO',
       hora_inicio: { lt: horaFin },
       hora_fin: { gt: horaInicio },

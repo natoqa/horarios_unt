@@ -17,7 +17,17 @@
       "WebFetch(domain:www.unitru.edu.pe)",
       "PowerShell(npx tsx prisma/seed-docentes.ts 2>&1)",
       "PowerShell(npx tsx prisma/delete-docente.ts 2>&1)",
-      "PowerShell(git init *)"
+      "PowerShell(git init *)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 50)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)",
+      "PowerShell(npx next build 2>&1 | Select-Object -Last 30)",
+      "PowerShell(npx next build 2>&1 | Select-Object -Last 35)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 10)",
+      "PowerShell(npx prisma db push 2>&1)",
+      "PowerShell(npx prisma db seed 2>&1)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(npx prisma *)"
     ]
   }
 }

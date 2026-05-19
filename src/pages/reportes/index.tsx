@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
 import { trpc } from '@/lib/trpc'
-import { CICLOS_ACADEMICOS } from '@/lib/constants'
+import { CICLOS_ACADEMICOS, CICLO_ACADEMICO_DEFAULT } from '@/lib/constants'
 import toast from 'react-hot-toast'
 import { Download, FileText } from 'lucide-react'
 
@@ -17,7 +17,7 @@ function descargarPdf(base64: string, nombre: string) {
 }
 
 export default function ReportesPage() {
-  const [ciclo, setCiclo] = useState('2024-I')
+  const [ciclo, setCiclo] = useState(CICLO_ACADEMICO_DEFAULT)
   const [docenteId, setDocenteId] = useState('')
 
   const { data: docentes } = trpc.docente.getAll.useQuery()
