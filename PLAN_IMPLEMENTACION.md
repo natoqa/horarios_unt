@@ -2,11 +2,18 @@
 
 ## Estado actual del proyecto
 
-El sistema cuenta con: autenticacion (NextAuth + JWT), CRUD completo de docentes/cursos/ambientes, generacion automatica de horarios con algoritmo greedy por prioridad, reportes PDF (jsPDF), dashboard con estadisticas, auditoria de cambios, y roles (Admin/Coordinador/Docente). Stack: Next.js 14 + tRPC + Prisma + PostgreSQL + Tailwind CSS.
+El sistema cuenta con: autenticacion (NextAuth + JWT), CRUD completo de docentes/cursos/ambientes, generacion automatica de horarios con algoritmo greedy por prioridad, reportes PDF (jsPDF) con grilla semanal por ciclo, dashboard con estadisticas, auditoria de cambios, y roles (Admin/Coordinador/Docente). Stack: Next.js 14 + tRPC + Prisma + PostgreSQL + Tailwind CSS.
+
+### Trabajo adicional completado (fuera del plan original)
+- ✅ PDF con grilla semanal identica a la UI (colores por ciclo, bloques multi-hora, leyenda, separador almuerzo)
+- ✅ PDF multi-pagina: una pagina por cada ciclo cuando se selecciona "Todos los ciclos"
+- ✅ Filtros de año academico + ciclo del curso en la pagina de reportes
+- ✅ Disponibilidad variada por docente con bloques minimo 2h consecutivas
+- ✅ Antiguedad actualizada para docentes de Ing. de Sistemas (Santos Fernandez: 25, Boy Chavil: 24)
 
 ---
 
-## FASE 1: Vista de horario como grilla semanal (PRIORIDAD CRITICA)
+## FASE 1: Vista de horario como grilla semanal ✅ COMPLETADA
 
 **Problema:** La vista actual (`src/pages/horarios/index.tsx`) muestra los horarios en una tabla plana con columnas (Dia, Hora, Curso, Docente, Ambiente, Tipo). Para un sistema de horarios universitario, esto es insuficiente: se necesita una grilla visual tipo calendario semanal.
 
@@ -63,7 +70,7 @@ Para cada horario:
 
 ---
 
-## FASE 2: Mejora del algoritmo de generacion (bloques consecutivos)
+## FASE 2: Mejora del algoritmo de generacion (bloques consecutivos) ✅ COMPLETADA
 
 **Problema:** En `src/server/services/horarioGenerator.ts`, el metodo `intentarAsignarHoras()` asigna slots de 1 hora independientemente. Un curso con 3h de teoria puede quedar disperso en Lunes 7am, Miercoles 11am, Viernes 3pm. En la realidad universitaria, las clases se agrupan en bloques de 2-3 horas consecutivas.
 
@@ -116,7 +123,7 @@ Para cada horario:
 
 ---
 
-## FASE 3: Edicion manual de horarios con modal
+## FASE 3: Edicion manual de horarios con modal ⬚ PENDIENTE
 
 **Problema:** No existe forma de editar un horario individual. El router `horario.update` existe en el backend pero no hay UI. Solo se puede generar automaticamente o eliminar.
 
@@ -143,7 +150,7 @@ Para cada horario:
 
 ---
 
-## FASE 4: Carga docente y estadisticas avanzadas
+## FASE 4: Carga docente y estadisticas avanzadas ⬚ PENDIENTE
 
 **Problema:** No hay visibilidad de como esta distribuida la carga horaria entre docentes. No se puede detectar facilmente si un docente tiene 20h/semana y otro solo 4h.
 
@@ -179,7 +186,10 @@ Para cada horario:
 
 ---
 
-## FASE 5: Deteccion y visualizacion de conflictos
+## FASE 5: Deteccion y visualizacion de conflictos 🔶 PARCIALMENTE COMPLETADA
+
+> **Hecho:** La grilla semanal ya muestra conflictos con borde rojo + animacion pulse en los bloques afectados. El header muestra el conteo de conflictos.
+> **Pendiente:** ConflictOverlay.tsx (overlay con icono de alerta), ConflictPanel.tsx (panel lateral con lista detallada de conflictos clickeables).
 
 **Problema:** Los conflictos se reportan como texto plano en listas. No hay indicacion visual en la grilla de donde estan los problemas.
 
@@ -210,7 +220,7 @@ Para cada horario:
 
 ---
 
-## FASE 6: Exportacion a Excel
+## FASE 6: Exportacion a Excel ⬚ PENDIENTE
 
 **Problema:** Solo hay exportacion PDF. Los coordinadores necesitan datos en Excel para manipularlos.
 
@@ -245,7 +255,7 @@ npm install xlsx
 
 ---
 
-## FASE 7: Importacion masiva CSV
+## FASE 7: Importacion masiva CSV ⬚ PENDIENTE
 
 **Problema:** Registrar 83 cursos y 11 docentes uno por uno es tedioso. No hay forma de carga masiva.
 
@@ -296,7 +306,7 @@ No se necesita libreria externa. Usar `FileReader` + split por lineas + split po
 
 ---
 
-## FASE 8: Gestion de prerrequisitos con grafo visual
+## FASE 8: Gestion de prerrequisitos con grafo visual ⬚ PENDIENTE
 
 **Problema:** El modelo `PrerrequisitoCurso` existe en el schema pero no hay UI. No se pueden gestionar prerrequisitos ni visualizar la cadena de dependencias.
 
@@ -337,7 +347,7 @@ npm install reactflow
 
 ---
 
-## FASE 9: Gestion de mantenimiento de ambientes
+## FASE 9: Gestion de mantenimiento de ambientes ⬚ PENDIENTE
 
 **Problema:** El modelo `MantenimientoAmbiente` existe pero no tiene UI. El generador no lo considera.
 
@@ -363,7 +373,7 @@ npm install reactflow
 
 ---
 
-## FASE 10: Mejoras de UX y funcionalidades menores
+## FASE 10: Mejoras de UX y funcionalidades menores ⬚ PENDIENTE
 
 ### 10.1 Busqueda global (Command Palette)
 
@@ -402,24 +412,24 @@ npm install reactflow
 
 ---
 
-## Orden de implementacion recomendado
+## Progreso de implementacion
 
 ```
-Semana 1:  FASE 1 (Grilla semanal) + FASE 3 (Edicion manual)
-           -> Estas dos juntas transforman la experiencia central del sistema
-
-Semana 2:  FASE 2 (Algoritmo bloques consecutivos) + FASE 5 (Conflictos visuales)
-           -> Mejoran la generacion y la deteccion de problemas
-
-Semana 3:  FASE 4 (Carga docente) + FASE 6 (Excel)
-           -> Estadisticas y exportacion, features de presentacion
-
-Semana 4:  FASE 7 (Import CSV) + FASE 8 (Prerrequisitos)
-           -> Carga masiva y gestion academica avanzada
-
-Semana 5:  FASE 9 (Mantenimiento) + FASE 10 (UX: dark mode, busqueda, notificaciones)
-           -> Polish final
+✅ FASE 1  - Grilla semanal (WeeklyGrid, ScheduleBlock, ScheduleFilters, HorarioDetailModal)
+✅ FASE 2  - Algoritmo bloques consecutivos (calcularDistribucionBloques, buscarBloqueConsecutivo,
+             colisionaConMismoCiclo, excederiaHorasConsecutivas, paridad ciclo/periodo)
+🔶 FASE 5  - Conflictos visuales (parcial: visualizacion en grilla hecha, panel lateral pendiente)
+⬚  FASE 3  - Edicion manual de horarios con modal
+⬚  FASE 4  - Carga docente y estadisticas avanzadas
+⬚  FASE 6  - Exportacion a Excel
+⬚  FASE 7  - Importacion masiva CSV
+⬚  FASE 8  - Gestion de prerrequisitos con grafo visual
+⬚  FASE 9  - Gestion de mantenimiento de ambientes
+⬚  FASE 10 - Mejoras de UX (dark mode, command palette, notificaciones)
 ```
+
+### Proximo paso recomendado
+FASE 3 (Edicion manual) — es la funcionalidad mas importante pendiente para la operacion diaria del sistema.
 
 ---
 

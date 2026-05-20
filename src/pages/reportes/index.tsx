@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
 import { trpc } from '@/lib/trpc'
-import { CICLOS_ACADEMICOS, CICLO_ACADEMICO_DEFAULT } from '@/lib/constants'
+import { CICLOS_ACADEMICOS, CICLO_ACADEMICO_DEFAULT, getCiclosCursoPorPeriodo } from '@/lib/constants'
 import toast from 'react-hot-toast'
 import { Download, FileText } from 'lucide-react'
+
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 
 function descargarPdf(base64: string, nombre: string) {
   const link = document.createElement('a')
@@ -18,7 +20,14 @@ function descargarPdf(base64: string, nombre: string) {
 
 export default function ReportesPage() {
   const [ciclo, setCiclo] = useState(CICLO_ACADEMICO_DEFAULT)
+  const [cicloCurso, setCicloCurso] = useState<string>('')
   const [docenteId, setDocenteId] = useState('')
+
+  const ciclosDisponibles = getCiclosCursoPorPeriodo(ciclo)
+
+  useEffect(() => {
+    setCicloCurso('')
+  }, [ciclo])
 
   const { data: docentes } = trpc.docente.getAll.useQuery()
   const generalMutation = trpc.reporte.generarHorarioGeneral.useMutation({
@@ -66,15 +75,32 @@ export default function ReportesPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Select
-                label="Ciclo"
+                label="Año académico"
                 value={ciclo}
                 onChange={(e) => setCiclo(e.target.value)}
                 options={CICLOS_ACADEMICOS.map((c) => ({ value: c, label: c }))}
               />
+              <Select
+                label="Ciclo del curso"
+                value={cicloCurso}
+                onChange={(e) => setCicloCurso(e.target.value)}
+                options={[
+                  { value: '', label: 'Todos los ciclos' },
+                  ...ciclosDisponibles.map((c) => ({
+                    value: c.toString(),
+                    label: `Ciclo ${ROMAN[c - 1]}`,
+                  })),
+                ]}
+              />
               <Button
                 className="w-full"
                 disabled={loading}
-                onClick={() => generalMutation.mutate({ ciclo })}
+                onClick={() =>
+                  generalMutation.mutate({
+                    ciclo,
+                    cicloCurso: cicloCurso ? parseInt(cicloCurso) : undefined,
+                  })
+                }
               >
                 {loading ? <Spinner size="sm" /> : <Download className="mr-2 h-4 w-4" />}
                 Descargar PDF

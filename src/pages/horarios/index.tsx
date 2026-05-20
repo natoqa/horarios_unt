@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge'
 import { WeeklyGrid } from '@/components/horarios/WeeklyGrid'
 import { ScheduleFilters, type FiltrosHorario } from '@/components/horarios/ScheduleFilters'
 import { HorarioDetailModal } from '@/components/horarios/HorarioDetailModal'
+import { HorarioFormModal } from '@/components/horarios/HorarioFormModal'
 import { trpc } from '@/lib/trpc'
 import { nombreDia, formatearHora, cn } from '@/lib/utils'
 import { CICLO_ACADEMICO_DEFAULT } from '@/lib/constants'
@@ -19,6 +20,8 @@ import {
   LayoutGrid,
   List,
   AlertTriangle,
+  Plus,
+  Download,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -36,6 +39,8 @@ export default function HorariosPage() {
   })
   const [selectedHorario, setSelectedHorario] = useState<HorarioConRelaciones | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [formModalOpen, setFormModalOpen] = useState(false)
+  const [editingHorario, setEditingHorario] = useState<HorarioConRelaciones | null>(null)
 
   const { data: horarios, isLoading } = trpc.horario.getAll.useQuery({
     ciclo: filtros.cicloAcademico,
@@ -49,6 +54,17 @@ export default function HorariosPage() {
       toast.success('Horario eliminado')
       utils.horario.getAll.invalidate()
       utils.horario.getConflictos.invalidate()
+    },
+    onError: (e) => toast.error(e.message),
+  })
+
+  const pdfMutation = trpc.reporte.generarHorarioGeneral.useMutation({
+    onSuccess: (d) => {
+      const link = document.createElement('a')
+      link.href = `data:application/pdf;base64,${d.archivo}`
+      link.download = d.nombre
+      link.click()
+      toast.success('PDF descargado')
     },
     onError: (e) => toast.error(e.message),
   })
@@ -148,6 +164,35 @@ export default function HorariosPage() {
                 <List className="h-4 w-4" />
               </button>
             </div>
+
+            <Button
+              variant="outline"
+              disabled={pdfMutation.isLoading || !horariosFiltrados.length}
+              onClick={() =>
+                pdfMutation.mutate({
+                  ciclo: filtros.cicloAcademico,
+                  cicloCurso: filtros.cicloCurso ? parseInt(filtros.cicloCurso) : undefined,
+                })
+              }
+            >
+              {pdfMutation.isLoading ? (
+                <Spinner size="sm" className="mr-2" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Descargar PDF
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingHorario(null)
+                setFormModalOpen(true)
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo horario
+            </Button>
 
             <Link href="/horarios/generar">
               <Button>
@@ -261,6 +306,24 @@ export default function HorariosPage() {
             setSelectedHorario(null)
           }}
           onDelete={(id) => deleteMutation.mutate(id)}
+          onEdit={(h) => {
+            setModalOpen(false)
+            setSelectedHorario(null)
+            setEditingHorario(h)
+            setFormModalOpen(true)
+          }}
+        />
+
+        {/* Modal crear/editar */}
+        <HorarioFormModal
+          open={formModalOpen}
+          onClose={() => {
+            setFormModalOpen(false)
+            setEditingHorario(null)
+          }}
+          horario={editingHorario}
+          onSuccess={() => utils.horario.getAll.invalidate()}
+          defaultCiclo={filtros.cicloAcademico}
         />
       </>
     </Layout>

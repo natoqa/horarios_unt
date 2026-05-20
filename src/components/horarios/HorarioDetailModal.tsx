@@ -12,6 +12,7 @@ import {
   FlaskConical,
   GraduationCap,
   Trash2,
+  Pencil,
 } from 'lucide-react'
 
 interface HorarioDetailModalProps {
@@ -19,6 +20,7 @@ interface HorarioDetailModalProps {
   open: boolean
   onClose: () => void
   onDelete?: (id: string) => void
+  onEdit?: (horario: HorarioConRelaciones) => void
 }
 
 const romanoCiclo: Record<number, string> = {
@@ -26,7 +28,7 @@ const romanoCiclo: Record<number, string> = {
   6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X',
 }
 
-export function HorarioDetailModal({ horario, open, onClose, onDelete }: HorarioDetailModalProps) {
+export function HorarioDetailModal({ horario, open, onClose, onDelete, onEdit }: HorarioDetailModalProps) {
   if (!horario) return null
 
   return (
@@ -102,21 +104,33 @@ export function HorarioDetailModal({ horario, open, onClose, onDelete }: Horario
         </div>
 
         {/* Acciones */}
-        {onDelete && (
-          <div className="flex justify-end pt-2 border-t">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                if (confirm('Desactivar este horario?')) {
-                  onDelete(horario.id)
-                  onClose()
-                }
-              }}
-            >
-              <Trash2 className="mr-2 h-3.5 w-3.5" />
-              Eliminar horario
-            </Button>
+        {(onEdit || onDelete) && (
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            {onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(horario)}
+              >
+                <Pencil className="mr-2 h-3.5 w-3.5" />
+                Editar
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (confirm('Desactivar este horario?')) {
+                    onDelete(horario.id)
+                    onClose()
+                  }
+                }}
+              >
+                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                Eliminar
+              </Button>
+            )}
           </div>
         )}
       </div>

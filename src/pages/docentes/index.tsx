@@ -11,7 +11,7 @@ import { trpc } from '@/lib/trpc'
 import { CATEGORIAS_DOCENTE, TIPOS_DOCENTE, ESCUELAS } from '@/lib/constants'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { Plus, Search, Users, Mail, Clock, Trash2, ShieldCheck, FileSignature, ChevronDown, GraduationCap, BookOpen } from 'lucide-react'
+import { Plus, Search, Users, Mail, Clock, Trash2, ShieldCheck, FileSignature, ChevronDown, GraduationCap, BookOpen, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tipoConfig = {
@@ -71,6 +71,8 @@ export default function DocentesPage() {
     escuela: 'Ingeniería de Sistemas',
   })
 
+  const [pdfEscuela, setPdfEscuela] = useState('')
+
   const toggleEscuela = (escuela: string) => {
     setCollapsed((prev) => {
       const next = new Set(prev)
@@ -94,6 +96,16 @@ export default function DocentesPage() {
     onSuccess: () => {
       toast.success('Docente desactivado')
       utils.docente.getAll.invalidate()
+    },
+    onError: (e) => toast.error(e.message),
+  })
+  const pdfMutation = trpc.reporte.generarReporteDocentes.useMutation({
+    onSuccess: (d) => {
+      const link = document.createElement('a')
+      link.href = `data:application/pdf;base64,${d.archivo}`
+      link.download = d.nombre
+      link.click()
+      toast.success('PDF descargado')
     },
     onError: (e) => toast.error(e.message),
   })
@@ -152,10 +164,34 @@ export default function DocentesPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Docentes</h1>
             <p className="text-gray-500 text-sm mt-1">Gestión de docentes por escuela profesional</p>
           </div>
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo docente
-          </Button>
+          <div className="flex items-center gap-2">
+            <select
+              value={pdfEscuela}
+              onChange={(e) => setPdfEscuela(e.target.value)}
+              className="h-9 rounded-lg border border-gray-200 bg-white text-sm px-3 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            >
+              <option value="">Todas las escuelas</option>
+              {ESCUELAS.map((e) => (
+                <option key={e.value} value={e.value}>{e.label}</option>
+              ))}
+            </select>
+            <Button
+              variant="outline"
+              disabled={pdfMutation.isLoading}
+              onClick={() => pdfMutation.mutate({ escuela: pdfEscuela || undefined })}
+            >
+              {pdfMutation.isLoading ? (
+                <Spinner size="sm" className="mr-2" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Descargar PDF
+            </Button>
+            <Button onClick={() => setModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo docente
+            </Button>
+          </div>
         </header>
 
         {/* Búsqueda + Stats */}

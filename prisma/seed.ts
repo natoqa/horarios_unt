@@ -187,12 +187,12 @@ async function main() {
     { codigo: 'DOC001', nombres: 'Everson David', apellidos: 'Agreda Gamboa', correo: 'eagreda@unitru.edu.pe', categoria: CategoriaDocente.ASOCIADO, tipo: TipoDocente.NOMBRADO, antiguedad: 10, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC002', nombres: 'Oscar Romel', apellidos: 'Alcantara Moreno', correo: 'oalcantara@unitru.edu.pe', categoria: CategoriaDocente.AUXILIAR, tipo: TipoDocente.NOMBRADO, antiguedad: 8, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC003', nombres: 'Cesar', apellidos: 'Arellano Salazar', correo: 'carellano@unitru.edu.pe', categoria: CategoriaDocente.AUXILIAR, tipo: TipoDocente.NOMBRADO, antiguedad: 6, escuela: 'Ingenieria de Sistemas' },
-    { codigo: 'DOC004', nombres: 'Luis Enrrique', apellidos: 'Boy Chavil', correo: 'lboy@unitru.edu.pe', categoria: CategoriaDocente.PRINCIPAL, tipo: TipoDocente.NOMBRADO, antiguedad: 25, escuela: 'Ingenieria de Sistemas' },
+    { codigo: 'DOC004', nombres: 'Luis Enrrique', apellidos: 'Boy Chavil', correo: 'lboy@unitru.edu.pe', categoria: CategoriaDocente.PRINCIPAL, tipo: TipoDocente.NOMBRADO, antiguedad: 24, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC005', nombres: 'Jose Alberto', apellidos: 'Gomez Avila', correo: 'jgomez@unitru.edu.pe', categoria: CategoriaDocente.AUXILIAR, tipo: TipoDocente.NOMBRADO, antiguedad: 5, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC006', nombres: 'Ricardo Dario', apellidos: 'Mendoza Rivera', correo: 'rmendoza@unitru.edu.pe', categoria: CategoriaDocente.AUXILIAR, tipo: TipoDocente.NOMBRADO, antiguedad: 7, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC007', nombres: 'Juan Carlos', apellidos: 'Obando Roldan', correo: 'jobando@unitru.edu.pe', categoria: CategoriaDocente.PRINCIPAL, tipo: TipoDocente.NOMBRADO, antiguedad: 20, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC008', nombres: 'Robert Jerry', apellidos: 'Sanchez Ticona', correo: 'rsanchez@unitru.edu.pe', categoria: CategoriaDocente.ASOCIADO, tipo: TipoDocente.NOMBRADO, antiguedad: 12, escuela: 'Ingenieria de Sistemas' },
-    { codigo: 'DOC009', nombres: 'Juan Pedro', apellidos: 'Santos Fernandez', correo: 'jsantos@unitru.edu.pe', categoria: CategoriaDocente.ASOCIADO, tipo: TipoDocente.NOMBRADO, antiguedad: 15, escuela: 'Ingenieria de Sistemas' },
+    { codigo: 'DOC009', nombres: 'Juan Pedro', apellidos: 'Santos Fernandez', correo: 'jsantos@unitru.edu.pe', categoria: CategoriaDocente.ASOCIADO, tipo: TipoDocente.NOMBRADO, antiguedad: 25, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC010', nombres: 'Julio Luis', apellidos: 'Tenorio Cabrera', correo: 'jtenorio@unitru.edu.pe', categoria: CategoriaDocente.ASOCIADO, tipo: TipoDocente.NOMBRADO, antiguedad: 14, escuela: 'Ingenieria de Sistemas' },
     { codigo: 'DOC011', nombres: 'Marcelino', apellidos: 'Torres Villanueva', correo: 'mtorres@unitru.edu.pe', categoria: CategoriaDocente.AUXILIAR, tipo: TipoDocente.NOMBRADO, antiguedad: 4, escuela: 'Ingenieria de Sistemas' },
 
@@ -229,29 +229,226 @@ async function main() {
     { codigo: 'DOC-AMB01', nombres: 'Silvia Marcela', apellidos: 'Torres Aguilar', correo: 'storres@unitru.edu.pe', categoria: CategoriaDocente.AUXILIAR, tipo: TipoDocente.NOMBRADO, antiguedad: 9, escuela: 'Ciencias Ambientales' },
   ]
 
+  // Disponibilidad por docente: bloques de minimo 2h, distribuidos para cubrir Lun-Vie
+  type Bloque = { dia: string; hora_inicio: string; hora_fin: string }
+  const disponibilidades: Record<string, Bloque[]> = {
+    // ── Ingenieria de Sistemas ──
+    DOC001: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    DOC002: [
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '18:00' },
+    ],
+    DOC003: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    DOC004: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    DOC005: [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    DOC006: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    DOC007: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    DOC008: [
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    DOC009: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    DOC010: [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    DOC011: [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    // ── Matematicas ──
+    'DOC-MAT01': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-MAT02': [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-MAT03': [
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    // ── Fisica ──
+    'DOC-FIS01': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-FIS02': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '18:00' },
+    ],
+    // ── Estadistica ──
+    'DOC-EST01': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    'DOC-EST02': [
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    // ── Ciencias Sociales ──
+    'DOC-SOC01': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-SOC02': [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '19:00' },
+    ],
+    'DOC-SOC03': [
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-SOC04': [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-SOC05': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '18:00' },
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-SOC06': [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '18:00' },
+    ],
+    // ── Economia ──
+    'DOC-ECO01': [
+      { dia: 'LUNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'MARTES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-ECO02': [
+      { dia: 'MIERCOLES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'VIERNES', hora_inicio: '14:00', hora_fin: '18:00' },
+    ],
+    // ── Contabilidad y Finanzas ──
+    'DOC-CON01': [
+      { dia: 'LUNES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+    'DOC-CON02': [
+      { dia: 'MIERCOLES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'JUEVES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '18:00' },
+    ],
+    // ── Ciencias Ambientales ──
+    'DOC-AMB01': [
+      { dia: 'MARTES', hora_inicio: '07:00', hora_fin: '12:00' },
+      { dia: 'JUEVES', hora_inicio: '14:00', hora_fin: '19:00' },
+      { dia: 'VIERNES', hora_inicio: '07:00', hora_fin: '12:00' },
+    ],
+  }
+
   const docenteIds: Record<string, string> = {}
 
   for (const docente of docentes) {
     const created = await prisma.docente.upsert({
       where: { codigo: docente.codigo },
-      update: {},
+      update: { antiguedad: docente.antiguedad },
       create: docente,
     })
     docenteIds[docente.codigo] = created.id
 
-    const existeDisponibilidad = await prisma.disponibilidadDocente.count({
+    await prisma.disponibilidadDocente.deleteMany({
       where: { docente_id: created.id },
     })
 
-    if (existeDisponibilidad === 0) {
-      const dias = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'] as const
-      for (const dia of dias) {
+    const bloques = disponibilidades[docente.codigo]
+    if (bloques) {
+      for (const b of bloques) {
         await prisma.disponibilidadDocente.create({
           data: {
             docente_id: created.id,
-            dia,
-            hora_inicio: '07:00',
-            hora_fin: '20:00',
+            dia: b.dia as any,
+            hora_inicio: b.hora_inicio,
+            hora_fin: b.hora_fin,
           },
         })
       }
