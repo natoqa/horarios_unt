@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -28,6 +29,10 @@ import toast from 'react-hot-toast'
 type Vista = 'grilla' | 'tabla'
 
 export default function HorariosPage() {
+  const { data: session } = useSession()
+  const rol = (session?.user as { rol?: string })?.rol ?? 'Usuario'
+  const esDocente = rol === 'DOCENTE'
+
   const [vista, setVista] = useState<Vista>('grilla')
   const [filtros, setFiltros] = useState<FiltrosHorario>({
     cicloAcademico: CICLO_ACADEMICO_DEFAULT,
@@ -183,23 +188,27 @@ export default function HorariosPage() {
               Descargar PDF
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditingHorario(null)
-                setFormModalOpen(true)
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo horario
-            </Button>
+            {!esDocente && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingHorario(null)
+                    setFormModalOpen(true)
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nuevo horario
+                </Button>
 
-            <Link href="/horarios/generar">
-              <Button>
-                <Calendar className="mr-2 h-4 w-4" />
-                Generar horarios
-              </Button>
-            </Link>
+                <Link href="/horarios/generar">
+                  <Button>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Generar horarios
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </header>
 
@@ -305,8 +314,8 @@ export default function HorariosPage() {
             setModalOpen(false)
             setSelectedHorario(null)
           }}
-          onDelete={(id) => deleteMutation.mutate(id)}
-          onEdit={(h) => {
+          onDelete={esDocente ? undefined : (id) => deleteMutation.mutate(id)}
+          onEdit={esDocente ? undefined : (h) => {
             setModalOpen(false)
             setSelectedHorario(null)
             setEditingHorario(h)

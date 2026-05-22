@@ -56,10 +56,16 @@ const isAuthenticated = middleware(async ({ ctx, next }) => {
 
 const isAdmin = middleware(async ({ ctx, next }) => {
   const rol = (ctx.session?.user as { rol?: string } | undefined)?.rol
-  if (!ctx.session?.user?.id || rol !== 'ADMINISTRADOR') {
+  const esAdminNivel = 
+    rol === 'ADMINISTRADOR' || 
+    rol === 'SECRETARIA' || 
+    rol === 'DIRECTOR' || 
+    rol === 'COORDINADOR'
+
+  if (!ctx.session?.user?.id || !esAdminNivel) {
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: 'Se requieren permisos de administrador',
+      message: 'Se requieren permisos de administración',
     })
   }
 

@@ -43,6 +43,8 @@ enum RolUsuario {
   ADMINISTRADOR
   DOCENTE
   COORDINADOR
+  SECRETARIA
+  DIRECTOR
 }
 
 model Usuario {

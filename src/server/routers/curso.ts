@@ -111,4 +111,40 @@ export const cursoRouter = router({
         orderBy: { codigo: 'asc' },
       })
     }),
+
+  asignarDocentes: adminProcedure
+    .input(
+      z.object({
+        curso_id: z.string(),
+        docentes_ids: z.array(z.string()),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.$transaction(async (tx) => {
+        // Eliminar las asignaciones actuales de este curso
+        await tx.cursoDocente.deleteMany({
+          where: { curso_id: input.curso_id },
+        })
+
+        // Crear las nuevas asignaciones
+        await tx.cursoDocente.createMany({
+          data: input.docentes_ids.map((docenteId) => ({
+            curso_id: input.curso_id,
+            docente_id: docenteId,
+          })),
+        })
+      })
+
+      await ctx.prisma.auditoriaCambio.create({
+        data: {
+          usuario_id: getUserId(ctx),
+          accion: 'ACTUALIZAR',
+          entidad: 'CursoDocente',
+          entidad_id: input.curso_id,
+          cambios: { total: input.docentes_ids.length } as any,
+        },
+      })
+
+      return { mensaje: 'Docentes asignados exitosamente al curso' }
+    }),
 })

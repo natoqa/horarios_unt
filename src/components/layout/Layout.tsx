@@ -11,22 +11,47 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  const rol = (session?.user as { rol?: string })?.rol
+  const userDocenteId = (session?.user as { docente_id?: string | null })?.docente_id
+  const esDocente = rol === 'DOCENTE'
+
+  let isUnauthorized = false
+  if (status === 'authenticated' && esDocente && router.isReady) {
+    const path = router.pathname
+    if (
+      path === '/docentes' ||
+      path.startsWith('/cursos') ||
+      path.startsWith('/ambientes') ||
+      path.startsWith('/reportes') ||
+      path.startsWith('/configuracion') ||
+      path === '/horarios/generar' ||
+      (path === '/docentes/[id]' && router.query.id !== userDocenteId)
+    ) {
+      isUnauthorized = true
+    }
+  }
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push(`/login?callbackUrl=${encodeURIComponent(router.asPath)}`)
+      return
     }
-  }, [status, router])
+
+    if (status === 'authenticated' && router.isReady && isUnauthorized) {
+      router.replace('/dashboard')
+    }
+  }, [status, router, router.isReady, isUnauthorized])
 
   useEffect(() => {
     setMobileOpen(false)
   }, [router.pathname])
 
-  if (status === 'loading') {
+  if (status === 'loading' || (status === 'authenticated' && isUnauthorized)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner size="lg" />

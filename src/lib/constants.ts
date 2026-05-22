@@ -85,6 +85,8 @@ export const DIAS_SEMANA = [
   
   export const ROLES_USUARIO = [
     { value: 'ADMINISTRADOR', label: 'Administrador' },
+    { value: 'SECRETARIA', label: 'Secretaria' },
+    { value: 'DIRECTOR', label: 'Director' },
     { value: 'COORDINADOR', label: 'Coordinador' },
     { value: 'DOCENTE', label: 'Docente' },
   ]

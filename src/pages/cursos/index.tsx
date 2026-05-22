@@ -10,7 +10,7 @@ import { trpc } from '@/lib/trpc'
 import toast from 'react-hot-toast'
 import { Select } from '@/components/ui/Select'
 import { DEPARTAMENTOS_CURSO } from '@/lib/constants'
-import { Plus, BookOpen, Clock, FlaskConical, GraduationCap, Trash2, Search, ChevronDown } from 'lucide-react'
+import { Plus, BookOpen, Clock, FlaskConical, GraduationCap, Trash2, Search, ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const romanoCiclo: Record<number, string> = {
@@ -59,6 +59,62 @@ export default function CursosPage() {
 
   const utils = trpc.useUtils()
   const { data: cursos, isLoading } = trpc.curso.getAll.useQuery()
+
+  // Estado para la asignación de docentes
+  const [asignarModalOpen, setAsignarModalOpen] = useState(false)
+  const [cursoSeleccionado, setCursoSeleccionado] = useState<any>(null)
+  const [docentesSeleccionados, setDocentesSeleccionados] = useState<Set<string>>(new Set())
+  const [buscarDocente, setBuscarDocente] = useState('')
+
+  const { data: docentes } = trpc.docente.getAll.useQuery(undefined, {
+    enabled: asignarModalOpen,
+  })
+
+  const asignarDocentesMutation = trpc.curso.asignarDocentes.useMutation({
+    onSuccess: () => {
+      toast.success('Docentes asignados correctamente')
+      utils.curso.getAll.invalidate()
+      setAsignarModalOpen(false)
+    },
+    onError: (e) => toast.error(e.message),
+  })
+
+  const handleOpenAsignar = (curso: any) => {
+    setCursoSeleccionado(curso)
+    setDocentesSeleccionados(new Set(curso.docentes.map((d: any) => d.docente.id)))
+    setBuscarDocente('')
+    setAsignarModalOpen(true)
+  }
+
+  const toggleDocente = (docenteId: string) => {
+    setDocentesSeleccionados((prev) => {
+      const next = new Set(prev)
+      next.has(docenteId) ? next.delete(docenteId) : next.add(docenteId)
+      return next
+    })
+  }
+
+  const handleSaveAsignar = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!cursoSeleccionado) return
+    asignarDocentesMutation.mutate({
+      curso_id: cursoSeleccionado.id,
+      docentes_ids: Array.from(docentesSeleccionados),
+    })
+  }
+
+  const docentesFiltradosModal = useMemo(() => {
+    if (!docentes) return []
+    if (!buscarDocente.trim()) return docentes
+    const q = buscarDocente.toLowerCase()
+    return docentes.filter(
+      (d) =>
+        d.nombres.toLowerCase().includes(q) ||
+        d.apellidos.toLowerCase().includes(q) ||
+        d.codigo.toLowerCase().includes(q)
+    )
+  }, [docentes, buscarDocente])
+
   const createMutation = trpc.curso.create.useMutation({
     onSuccess: () => {
       toast.success('Curso registrado')
@@ -198,16 +254,29 @@ export default function CursosPage() {
                           {c.codigo}
                         </span>
 
-                        {/* Nombre + Departamento */}
+                        {/* Nombre + Departamento + Docentes Asignados */}
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate block">
                             {c.nombre}
                           </span>
-                          {(c as any).departamento && (c as any).departamento !== 'Ingeniería de Sistemas' && (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                              {(c as any).departamento}
-                            </span>
-                          )}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            {(c as any).departamento && (c as any).departamento !== 'Ingeniería de Sistemas' && (
+                              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium mr-1.5 shrink-0">
+                                {(c as any).departamento}
+                              </span>
+                            )}
+                            {c.docentes && c.docentes.length > 0 ? (
+                              c.docentes.map((cd: any) => (
+                                <Badge key={cd.docente.id} variant="default" className="text-[10px] py-0 px-1.5 font-normal dark:bg-gray-700 dark:text-gray-300">
+                                  {cd.docente.nombres} {cd.docente.apellidos}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                                Sin docentes asignados
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Tags de horas */}
@@ -230,17 +299,26 @@ export default function CursosPage() {
                         </Badge>
 
                         {/* Acción */}
-                        <button
-                          onClick={() => {
-                            if (confirm('¿Desactivar este curso?')) {
-                              deleteMutation.mutate(c.id)
-                            }
-                          }}
-                          className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Desactivar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button
+                            onClick={() => handleOpenAsignar(c)}
+                            className="p-1.5 rounded-md text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                            title="Asignar docentes"
+                          >
+                            <GraduationCap className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('¿Desactivar este curso?')) {
+                                deleteMutation.mutate(c.id)
+                              }
+                            }}
+                            className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            title="Desactivar"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>}
@@ -267,6 +345,83 @@ export default function CursosPage() {
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
               <Button type="submit" disabled={createMutation.isLoading}>Guardar</Button>
+            </div>
+          </form>
+        </Modal>
+
+        {/* Modal asignar docentes */}
+        <Modal
+          open={asignarModalOpen}
+          onClose={() => setAsignarModalOpen(false)}
+          title={`Asignar docentes a: ${cursoSeleccionado?.nombre ?? ''}`}
+          size="lg"
+        >
+          <form onSubmit={handleSaveAsignar} className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar docente por nombre o código..."
+                value={buscarDocente}
+                onChange={(e) => setBuscarDocente(e.target.value)}
+                className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+            </div>
+
+            <div className="max-h-[300px] overflow-y-auto border border-gray-100 rounded-lg p-2 space-y-1 dark:border-gray-700">
+              {docentesFiltradosModal.length > 0 ? (
+                docentesFiltradosModal.map((docente) => {
+                  const selected = docentesSeleccionados.has(docente.id)
+                  return (
+                    <button
+                      key={docente.id}
+                      type="button"
+                      onClick={() => toggleDocente(docente.id)}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm',
+                        selected
+                          ? 'bg-primary-50 border border-primary-200 dark:bg-primary-950/20 dark:border-primary-900'
+                          : 'hover:bg-gray-50 border border-transparent dark:hover:bg-gray-700/50'
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
+                          selected
+                            ? 'bg-primary-600 border-primary-600'
+                            : 'border-gray-300 dark:border-gray-600'
+                        )}
+                      >
+                        {selected && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <span className="font-mono text-xs text-gray-400 w-16 shrink-0">
+                        {docente.codigo}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-gray-900 dark:text-gray-100 truncate block">
+                          {docente.apellidos}, {docente.nombres}
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 block">
+                          {docente.escuela} — {docente.categoria} ({docente.tipo})
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="text-center py-6 text-sm text-gray-500">
+                  No se encontraron docentes.
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setAsignarModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={asignarDocentesMutation.isLoading}>
+                Guardar asignaciones
+              </Button>
             </div>
           </form>
         </Modal>

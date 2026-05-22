@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  Clock,
 } from 'lucide-react'
 
 const menuPrincipal = [
@@ -47,6 +48,27 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const nombre = session?.user?.name ?? 'Usuario'
   const rol = (session?.user as { rol?: string })?.rol ?? 'Usuario'
   const iniciales = nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+  
+  const esDocente = rol === 'DOCENTE'
+  const docenteId = (session?.user as { docente_id?: string | null })?.docente_id
+
+  const menuPrincipalFiltrado = menuPrincipal.filter(item => {
+    if (esDocente) {
+      return item.href === '/dashboard' || item.href === '/horarios'
+    }
+    return true
+  })
+
+  const menuPrincipalFinal = [...menuPrincipalFiltrado]
+  if (esDocente && docenteId) {
+    menuPrincipalFinal.push({
+      href: `/docentes/${docenteId}`,
+      label: 'Mi Disponibilidad',
+      icon: Clock
+    })
+  }
+
+  const menuSecundarioFiltrado = esDocente ? [] : menuSecundario
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -114,25 +136,29 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           )}
         </div>
         <div className="space-y-0.5">
-          {menuPrincipal.map((item) => (
+          {menuPrincipalFinal.map((item) => (
             <NavItem key={item.href} item={item} isCollapsed={isCollapsed} />
           ))}
         </div>
 
-        <div className={cn('my-4', isCollapsed ? 'mx-1' : 'mx-3')}>
-          <div className="border-t border-gray-100 dark:border-gray-800" />
-        </div>
+        {menuSecundarioFiltrado.length > 0 && (
+          <>
+            <div className={cn('my-4', isCollapsed ? 'mx-1' : 'mx-3')}>
+              <div className="border-t border-gray-100 dark:border-gray-800" />
+            </div>
 
-        <div className="h-5 mb-1">
-          {!isCollapsed && (
-            <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Sistema</p>
-          )}
-        </div>
-        <div className="space-y-0.5">
-          {menuSecundario.map((item) => (
-            <NavItem key={item.href} item={item} isCollapsed={isCollapsed} />
-          ))}
-        </div>
+            <div className="h-5 mb-1">
+              {!isCollapsed && (
+                <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Sistema</p>
+              )}
+            </div>
+            <div className="space-y-0.5">
+              {menuSecundarioFiltrado.map((item) => (
+                <NavItem key={item.href} item={item} isCollapsed={isCollapsed} />
+              ))}
+            </div>
+          </>
+        )}
       </nav>
 
       {/* Footer - Usuario */}

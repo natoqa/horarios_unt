@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -37,8 +38,12 @@ const DIAS = DIAS_SEMANA.filter((d) => d.value !== 'SABADO')
 export default function DocenteDetallePage() {
   const router = useRouter()
   const id = router.query.id as string
+  const { data: session } = useSession()
+  const rol = (session?.user as { rol?: string })?.rol ?? 'Usuario'
+  const esDocente = rol === 'DOCENTE'
 
   const [tab, setTab] = useState<'cursos' | 'disponibilidad'>('cursos')
+  const activeTab = esDocente ? 'disponibilidad' : tab
   const [cursosSeleccionados, setCursosSeleccionados] = useState<Set<string>>(new Set())
   const [disponibilidad, setDisponibilidad] = useState<Set<string>>(new Set())
   const [initialized, setInitialized] = useState(false)
@@ -161,13 +166,23 @@ export default function DocenteDetallePage() {
     <Layout>
       <>
         <header className="mb-6">
-          <Link
-            href="/docentes"
-            className="inline-flex items-center text-sm text-primary-600 hover:underline mb-4"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Volver a docentes
-          </Link>
+          {!esDocente ? (
+            <Link
+              href="/docentes"
+              className="inline-flex items-center text-sm text-primary-600 hover:underline mb-4"
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Volver a docentes
+            </Link>
+          ) : (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center text-sm text-primary-600 hover:underline mb-4"
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Volver al dashboard
+            </Link>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shrink-0">
@@ -199,130 +214,128 @@ export default function DocenteDetallePage() {
         </header>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
-          <button
-            onClick={() => setTab('cursos')}
-            className={cn(
-              'px-4 py-2 rounded-md text-sm font-medium transition-colors',
-              tab === 'cursos'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <BookOpen className="inline mr-2 h-4 w-4" />
-            Cursos asignados ({cursosSeleccionados.size})
-          </button>
-          <button
-            onClick={() => setTab('disponibilidad')}
-            className={cn(
-              'px-4 py-2 rounded-md text-sm font-medium transition-colors',
-              tab === 'disponibilidad'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <Clock className="inline mr-2 h-4 w-4" />
-            Disponibilidad ({disponibilidad.size} bloques)
-          </button>
-        </div>
+        {!esDocente && (
+          <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
+            <button
+              onClick={() => setTab('cursos')}
+              className={cn(
+                'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                tab === 'cursos'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              )}
+            >
+              <BookOpen className="inline mr-2 h-4 w-4" />
+              Cursos asignados ({cursosSeleccionados.size})
+            </button>
+            <button
+              onClick={() => setTab('disponibilidad')}
+              className={cn(
+                'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                tab === 'disponibilidad'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              )}
+            >
+              <Clock className="inline mr-2 h-4 w-4" />
+              Disponibilidad ({disponibilidad.size} bloques)
+            </button>
+          </div>
+        )}
 
         {/* Tab: Cursos */}
-        {tab === 'cursos' && (
+        {activeTab === 'cursos' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                Selecciona los cursos que dicta este docente. Los cursos de otros departamentos
-                aparecen marcados.
-              </p>
-              <Button
-                onClick={guardarCursos}
-                disabled={asignarCursosMutation.isLoading}
-                size="sm"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                Guardar cursos
-              </Button>
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 dark:bg-gray-800 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-primary-500" />
+                  Cursos Asignados para este Docente
+                </h3>
+                <span className="text-xs text-gray-400">
+                  Total de créditos: {docente.cursos_asignados?.reduce((acc: number, ca: any) => acc + ca.curso.creditos, 0) ?? 0}
+                </span>
+              </div>
+              
+              {docente.cursos_asignados && docente.cursos_asignados.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {docente.cursos_asignados.map((ca: any) => (
+                    <div
+                      key={ca.id}
+                      className="flex items-center gap-3 p-3.5 rounded-lg border border-gray-100 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center shrink-0">
+                        <BookOpen className="h-4 w-4 text-primary-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 block truncate">
+                          {ca.curso.nombre}
+                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-mono text-gray-400 font-semibold">
+                            {ca.curso.codigo}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Ciclo {romanoCiclo[ca.curso.ciclo] ?? ca.curso.ciclo}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge variant="info" className="shrink-0 text-[10px]">
+                        {ca.curso.creditos} crd
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <BookOpen className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm font-medium">Este docente aún no tiene cursos asignados.</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    La asignación de cursos debe realizarse desde el módulo de cursos.
+                  </p>
+                </div>
+              )}
             </div>
-
-            {cursosPorCiclo.map(([ciclo, cursosCiclo]) => (
-              <Card key={ciclo}>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm">
-                    Ciclo {romanoCiclo[ciclo] ?? ciclo}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="py-0 pb-3">
-                  <div className="space-y-1">
-                    {cursosCiclo.map((curso) => {
-                      const selected = cursosSeleccionados.has(curso.id)
-                      const externo = esExterno(curso)
-                      return (
-                        <button
-                          key={curso.id}
-                          type="button"
-                          onClick={() => toggleCurso(curso.id)}
-                          className={cn(
-                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm',
-                            selected
-                              ? 'bg-primary-50 border border-primary-200'
-                              : 'hover:bg-gray-50 border border-transparent'
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                              selected
-                                ? 'bg-primary-600 border-primary-600'
-                                : 'border-gray-300'
-                            )}
-                          >
-                            {selected && <Check className="h-3 w-3 text-white" />}
-                          </div>
-                          <span className="font-mono text-xs text-gray-400 w-14 shrink-0">
-                            {curso.codigo}
-                          </span>
-                          <span className="flex-1 truncate">{curso.nombre}</span>
-                          {externo && (
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">
-                              {(curso as any).departamento}
-                            </span>
-                          )}
-                          <span className="text-xs text-gray-400 shrink-0">
-                            {curso.horas_teoria}T + {curso.horas_laboratorio}L
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         )}
 
         {/* Tab: Disponibilidad */}
-        {tab === 'disponibilidad' && (
+        {activeTab === 'disponibilidad' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-500">
-                <p>Haz clic en las celdas para marcar disponibilidad. Clic en el nombre del
-                  d&iacute;a para seleccionar todo el d&iacute;a.</p>
-                {disponibilidad.size === 0 && (
-                  <p className="flex items-center gap-1 mt-1 text-amber-600">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    Sin disponibilidad: el generador asignar&aacute; en cualquier franja
+            {!esDocente && (docente?.disponibilidades?.length ?? 0) === 0 ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-sm">Disponibilidad no registrada por el docente</h4>
+                  <p className="text-xs mt-1">
+                    La disponibilidad de horarios debe ser ingresada inicialmente por el propio profesor. 
+                    Hasta que el docente no registre su disponibilidad por primera vez desde su cuenta, 
+                    administración no podrá crearla ni modificarla.
                   </p>
-                )}
+                </div>
               </div>
-              <Button
-                onClick={guardarDisponibilidad}
-                disabled={updateDisponibilidadMutation.isLoading}
-                size="sm"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                Guardar disponibilidad
-              </Button>
-            </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  <p>Haz clic en las celdas para marcar disponibilidad. Clic en el nombre del
+                    d&iacute;a para seleccionar todo el d&iacute;a.</p>
+                  {disponibilidad.size === 0 && (
+                    <p className="flex items-center gap-1 mt-1 text-amber-600">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Sin disponibilidad: el generador asignar&aacute; en cualquier franja
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={guardarDisponibilidad}
+                  disabled={updateDisponibilidadMutation.isLoading}
+                  size="sm"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar disponibilidad
+                </Button>
+              </div>
+            )}
 
             <Card>
               <CardContent className="p-0 overflow-x-auto">
@@ -330,17 +343,24 @@ export default function DocenteDetallePage() {
                   <thead>
                     <tr className="border-b">
                       <th className="p-2 text-left text-gray-500 font-medium w-24">Hora</th>
-                      {DIAS.map((dia) => (
-                        <th key={dia.value} className="p-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => seleccionarDiaCompleto(dia.value)}
-                            className="font-medium text-gray-700 hover:text-primary-600 transition-colors"
-                          >
-                            {dia.label}
-                          </button>
-                        </th>
-                      ))}
+                      {DIAS.map((dia) => {
+                        const disabledGrid = !esDocente && (docente?.disponibilidades?.length ?? 0) === 0
+                        return (
+                          <th key={dia.value} className="p-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => seleccionarDiaCompleto(dia.value)}
+                              disabled={disabledGrid}
+                              className={cn(
+                                "font-medium text-gray-700 hover:text-primary-600 transition-colors",
+                                disabledGrid && "opacity-60 cursor-not-allowed hover:text-gray-700"
+                              )}
+                            >
+                              {dia.label}
+                            </button>
+                          </th>
+                        )
+                      })}
                     </tr>
                   </thead>
                   <tbody>
@@ -357,6 +377,7 @@ export default function DocenteDetallePage() {
                         {DIAS.map((dia) => {
                           const key = `${dia.value}_${hora.inicio}`
                           const active = disponibilidad.has(key)
+                          const disabledGrid = !esDocente && (docente?.disponibilidades?.length ?? 0) === 0
                           return (
                             <td key={dia.value} className="p-1 text-center">
                               <button
@@ -364,14 +385,18 @@ export default function DocenteDetallePage() {
                                 onClick={() =>
                                   toggleDisponibilidad(dia.value, hora.inicio)
                                 }
+                                disabled={disabledGrid}
                                 className={cn(
                                   'w-full h-8 rounded-md border transition-all',
                                   active
                                     ? 'bg-green-500 border-green-600 shadow-sm'
-                                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100',
+                                  disabledGrid && 'opacity-50 cursor-not-allowed hover:bg-gray-50'
                                 )}
                                 title={
-                                  active
+                                  disabledGrid
+                                    ? 'No se puede modificar (el docente aún no registra disponibilidad)'
+                                    : active
                                     ? `${dia.label} ${hora.label} - Disponible`
                                     : `${dia.label} ${hora.label} - No disponible`
                                 }

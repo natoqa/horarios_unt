@@ -136,7 +136,7 @@ export const docenteRouter = router({
       return { mensaje: 'Docente desactivado exitosamente' }
     }),
 
-  updateDisponibilidad: adminProcedure
+  updateDisponibilidad: protectedProcedure
     .input(
       z.object({
         docente_id: z.string(),
@@ -150,6 +150,35 @@ export const docenteRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const rol = ctx.session.user.rol
+      const docenteId = ctx.session.user.docente_id
+      
+      const esAdminNivel = 
+        rol === 'ADMINISTRADOR' || 
+        rol === 'SECRETARIA' || 
+        rol === 'DIRECTOR' || 
+        rol === 'COORDINADOR'
+
+      if (!esAdminNivel && docenteId !== input.docente_id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'No tiene permisos para modificar esta disponibilidad',
+        })
+      }
+
+      // Si es de nivel administrativo, no puede crear la disponibilidad si el docente aún no ha registrado ninguna.
+      if (esAdminNivel) {
+        const disponibilidadActual = await ctx.prisma.disponibilidadDocente.count({
+          where: { docente_id: input.docente_id },
+        })
+        if (disponibilidadActual === 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'El docente aún no ha registrado su disponibilidad. Debe registrarla por primera vez desde su propia cuenta.',
+          })
+        }
+      }
+
       await ctx.prisma.$transaction(async (tx) => {
         await tx.disponibilidadDocente.deleteMany({
           where: { docente_id: input.docente_id },

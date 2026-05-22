@@ -55,7 +55,7 @@ export const usuarioRouter = router({
         contrasena: z.string().min(8),
         nombre: z.string().min(2),
         apellidos: z.string().min(2),
-        rol: z.enum(['ADMINISTRADOR', 'DOCENTE', 'COORDINADOR']),
+        rol: z.enum(['ADMINISTRADOR', 'DOCENTE', 'COORDINADOR', 'SECRETARIA', 'DIRECTOR']),
         docente_id: z.string().optional(),
       })
     )
@@ -104,7 +104,7 @@ export const usuarioRouter = router({
         data: z.object({
           nombre: z.string().min(2).optional(),
           apellidos: z.string().min(2).optional(),
-          rol: z.enum(['ADMINISTRADOR', 'DOCENTE', 'COORDINADOR']).optional(),
+          rol: z.enum(['ADMINISTRADOR', 'DOCENTE', 'COORDINADOR', 'SECRETARIA', 'DIRECTOR']).optional(),
           activo: z.boolean().optional(),
         }),
       })
