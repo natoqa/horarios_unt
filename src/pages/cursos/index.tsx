@@ -116,8 +116,8 @@ export default function CursosPage() {
         {/* Header */}
         <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Cursos</h1>
-            <p className="text-gray-500 text-sm mt-1">Plan de estudios — Ingeniería de Sistemas</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Cursos</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Plan de estudios — Ingeniería de Sistemas</p>
           </div>
           <Button onClick={() => setModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -134,19 +134,19 @@ export default function CursosPage() {
               placeholder="Buscar por nombre o código..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
           </div>
           <div className="flex gap-3">
-            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm">
+            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm dark:bg-gray-800 dark:border-gray-700">
               <BookOpen className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-500">Cursos:</span>
-              <span className="font-semibold text-gray-900">{cursosFiltrados.length}</span>
+              <span className="text-gray-500 dark:text-gray-400">Cursos:</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{cursosFiltrados.length}</span>
             </div>
-            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm">
+            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm dark:bg-gray-800 dark:border-gray-700">
               <GraduationCap className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-500">Créditos:</span>
-              <span className="font-semibold text-gray-900">{totalCreditos}</span>
+              <span className="text-gray-500 dark:text-gray-400">Créditos:</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{totalCreditos}</span>
             </div>
           </div>
         </div>
@@ -160,20 +160,20 @@ export default function CursosPage() {
           <EmptyState titulo="Sin cursos" descripcion="Registre el primer curso." />
         ) : cursosPorCiclo.length === 0 ? (
           <div className="text-center py-16">
-            <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No se encontraron cursos para "{busqueda}"</p>
+            <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No se encontraron cursos para "{busqueda}"</p>
           </div>
         ) : (
           <div className="space-y-6">
             {cursosPorCiclo.map(([ciclo, cursosCiclo]) => {
               const color = colorCiclo[ciclo] ?? defaultColor
               return (
-                <div key={ciclo} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div key={ciclo} className="bg-white rounded-xl border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
                   {/* Header del ciclo */}
                   <button
                     type="button"
                     onClick={() => toggleCiclo(ciclo)}
-                    className={cn('w-full px-5 py-3.5 flex items-center justify-between cursor-pointer transition-colors hover:brightness-95', color.bg, !collapsed.has(ciclo) && 'border-b border-gray-100')}
+                    className={cn('w-full px-5 py-3.5 flex items-center justify-between cursor-pointer transition-colors hover:brightness-95 dark:hover:brightness-110', color.bg, !collapsed.has(ciclo) && 'border-b border-gray-100 dark:border-gray-700')}
                   >
                     <div className="flex items-center gap-3">
                       <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', color.text, collapsed.has(ciclo) && '-rotate-90')} />
@@ -190,9 +190,9 @@ export default function CursosPage() {
                   </button>
 
                   {/* Lista de cursos */}
-                  {!collapsed.has(ciclo) && <div className="divide-y divide-gray-50">
+                  {!collapsed.has(ciclo) && <div className="divide-y divide-gray-50 dark:divide-gray-700">
                     {cursosCiclo.map((c) => (
-                      <div key={c.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors group">
+                      <div key={c.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors group">
                         {/* Código */}
                         <span className="text-xs font-mono font-semibold text-gray-400 w-16 shrink-0">
                           {c.codigo}
@@ -200,11 +200,11 @@ export default function CursosPage() {
 
                         {/* Nombre + Departamento */}
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-gray-900 truncate block">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate block">
                             {c.nombre}
                           </span>
                           {(c as any).departamento && (c as any).departamento !== 'Ingeniería de Sistemas' && (
-                            <span className="text-[10px] text-amber-600 font-medium">
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
                               {(c as any).departamento}
                             </span>
                           )}
@@ -212,12 +212,12 @@ export default function CursosPage() {
 
                         {/* Tags de horas */}
                         <div className="hidden sm:flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-xs text-gray-500" title="Horas de teoría">
+                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Horas de teoría">
                             <Clock className="h-3.5 w-3.5" />
                             <span>{c.horas_teoria}T</span>
                           </div>
                           {c.horas_laboratorio > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500" title="Horas de laboratorio">
+                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Horas de laboratorio">
                               <FlaskConical className="h-3.5 w-3.5" />
                               <span>{c.horas_laboratorio}L</span>
                             </div>
@@ -236,7 +236,7 @@ export default function CursosPage() {
                               deleteMutation.mutate(c.id)
                             }
                           }}
-                          className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
                           title="Desactivar"
                         >
                           <Trash2 className="h-4 w-4" />

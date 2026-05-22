@@ -17,15 +17,41 @@ const docentes = [
 ]
 
 async function main() {
-  await prisma.horario.deleteMany({ where: { docente: { escuela: 'Ingeniería de Sistemas' } } })
-  await prisma.cursoDocente.deleteMany({ where: { docente: { escuela: 'Ingeniería de Sistemas' } } })
-  await prisma.disponibilidadDocente.deleteMany({ where: { docente: { escuela: 'Ingeniería de Sistemas' } } })
-  await prisma.docente.deleteMany()
+  // Obtener IDs de docentes de Ingeniería de Sistemas
+  const docentesSistemas = await prisma.docente.findMany({
+    where: { escuela: 'Ingeniería de Sistemas' },
+    select: { id: true }
+  })
+  const docenteIds = docentesSistemas.map(d => d.id)
+
+  // Eliminar registros relacionados primero
+  await prisma.horario.deleteMany({
+    where: { docente_id: { in: docenteIds } }
+  })
+  await prisma.cursoDocente.deleteMany({
+    where: { docente_id: { in: docenteIds } }
+  })
+  await prisma.disponibilidadDocente.deleteMany({
+    where: { docente_id: { in: docenteIds } }
+  })
+  await prisma.docente.deleteMany({
+    where: { id: { in: docenteIds } }
+  })
   console.log('Docentes anteriores eliminados')
 
   for (const d of docentes) {
-    await prisma.docente.create({
-      data: {
+    await prisma.docente.upsert({
+      where: { codigo: d.codigo },
+      update: {
+        nombres: d.nombres,
+        apellidos: d.apellidos,
+        correo: d.correo,
+        categoria: d.categoria,
+        tipo: TipoDocente.NOMBRADO,
+        escuela: 'Ingeniería de Sistemas',
+        antiguedad: 0,
+      },
+      create: {
         ...d,
         tipo: TipoDocente.NOMBRADO,
         escuela: 'Ingeniería de Sistemas',

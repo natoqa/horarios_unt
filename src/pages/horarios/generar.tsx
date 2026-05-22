@@ -40,8 +40,8 @@ export default function GenerarHorariosPage() {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Volver a horarios
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Generación automática</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Generación automática</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
             Algoritmo inteligente con bloques consecutivos y validacion de conflictos
           </p>
         </header>
@@ -51,10 +51,10 @@ export default function GenerarHorariosPage() {
             <CardTitle>Parámetros</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Ciclo académico
               <select
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 value={ciclo}
                 onChange={(e) => setCiclo(e.target.value)}
               >
@@ -64,20 +64,20 @@ export default function GenerarHorariosPage() {
               </select>
             </label>
 
-            <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
-              <p className="text-xs font-medium text-blue-800 flex items-center gap-1.5">
+            <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 dark:bg-blue-900/20 dark:border-blue-800">
+              <p className="text-xs font-medium text-blue-800 dark:text-blue-200 flex items-center gap-1.5">
                 <Info className="h-3.5 w-3.5 shrink-0" />
                 Ciclos a generar: {getCiclosCursoPorPeriodo(ciclo).map(c => {
                   const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X']
                   return roman[c - 1]
                 }).join(', ')}
               </p>
-              <p className="text-[11px] text-blue-600 mt-0.5 ml-5">
+              <p className="text-[11px] text-blue-600 dark:text-blue-300 mt-0.5 ml-5">
                 {ciclo.endsWith('-I') ? 'Periodo I = ciclos impares' : ciclo.endsWith('-II') ? 'Periodo II = ciclos pares' : 'Nivelacion = todos los ciclos'}
               </p>
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={forzar}
@@ -109,10 +109,10 @@ export default function GenerarHorariosPage() {
         {/* Info del algoritmo */}
         <Card className="mt-6 max-w-xl">
           <CardHeader>
-            <CardTitle className="text-sm">Caracteristicas del algoritmo</CardTitle>
+            <CardTitle className="text-sm dark:text-gray-100">Caracteristicas del algoritmo</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="text-xs text-gray-600 space-y-1.5">
+            <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
                 Prioridad: nombrados antes que contratados, por categoria y antiguedad
@@ -147,11 +147,11 @@ export default function GenerarHorariosPage() {
               <CardTitle>Resultado</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <p className="font-medium text-green-700">Asignaciones creadas: {resultado.total}</p>
+              <p className="font-medium text-green-700 dark:text-green-400">Asignaciones creadas: {resultado.total}</p>
               {resultado.conflictos.length > 0 && (
                 <div>
-                  <p className="font-medium text-red-700 mb-1">Conflictos ({resultado.conflictos.length})</p>
-                  <ul className="list-disc pl-5 text-red-600 space-y-0.5">
+                  <p className="font-medium text-red-700 dark:text-red-400 mb-1">Conflictos ({resultado.conflictos.length})</p>
+                  <ul className="list-disc pl-5 text-red-600 dark:text-red-300 space-y-0.5">
                     {resultado.conflictos.map((c, i) => (
                       <li key={i}>{c}</li>
                     ))}
@@ -160,8 +160,8 @@ export default function GenerarHorariosPage() {
               )}
               {resultado.advertencias.length > 0 && (
                 <div>
-                  <p className="font-medium text-amber-700 mb-1">Advertencias ({resultado.advertencias.length})</p>
-                  <ul className="list-disc pl-5 text-amber-600 space-y-0.5">
+                  <p className="font-medium text-amber-700 dark:text-amber-400 mb-1">Advertencias ({resultado.advertencias.length})</p>
+                  <ul className="list-disc pl-5 text-amber-600 dark:text-amber-300 space-y-0.5">
                     {resultado.advertencias.map((a, i) => (
                       <li key={i}>{a}</li>
                     ))}
@@ -169,7 +169,7 @@ export default function GenerarHorariosPage() {
                 </div>
               )}
               {resultado.conflictos.length === 0 && resultado.advertencias.length === 0 && (
-                <p className="text-green-600">Sin conflictos ni advertencias.</p>
+                <p className="text-green-600 dark:text-green-400">Sin conflictos ni advertencias.</p>
               )}
             </CardContent>
           </Card>

@@ -122,12 +122,12 @@ export default function HorariosPage() {
         {/* Header */}
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Horarios</h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Horarios</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               {horariosFiltrados.length} bloques
               {filtros.cicloAcademico && ` — ciclo ${filtros.cicloAcademico}`}
               {conflictHorarioIds.size > 0 && (
-                <span className="inline-flex items-center gap-1 ml-2 text-red-600">
+                <span className="inline-flex items-center gap-1 ml-2 text-red-600 dark:text-red-400">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   {conflictHorarioIds.size} en conflicto
                 </span>
@@ -136,15 +136,15 @@ export default function HorariosPage() {
           </div>
           <div className="flex items-center gap-2">
             {/* Toggle vista */}
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={() => setVista('grilla')}
                 className={cn(
                   'p-2 rounded-md transition-colors',
                   vista === 'grilla'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200'
                 )}
                 title="Vista grilla"
               >
@@ -156,8 +156,8 @@ export default function HorariosPage() {
                 className={cn(
                   'p-2 rounded-md transition-colors',
                   vista === 'tabla'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200'
                 )}
                 title="Vista tabla"
               >
@@ -225,8 +225,8 @@ export default function HorariosPage() {
           />
         ) : horariosFiltrados.length === 0 ? (
           <div className="text-center py-16">
-            <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">
+            <Calendar className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               No se encontraron horarios con los filtros seleccionados.
             </p>
           </div>
@@ -257,8 +257,8 @@ export default function HorariosPage() {
                     <TableRow
                       key={h.id}
                       className={cn(
-                        'cursor-pointer hover:bg-gray-50',
-                        conflictHorarioIds.has(h.id) && 'bg-red-50'
+                        'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
+                        conflictHorarioIds.has(h.id) && 'bg-red-50 dark:bg-red-900/20'
                       )}
                       onClick={() => openDetail(h)}
                     >

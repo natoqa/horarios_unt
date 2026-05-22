@@ -18,18 +18,18 @@ export function RecentActivity({ actividad }: RecentActivityProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Actividad reciente</CardTitle>
+        <CardTitle className="text-lg dark:text-gray-100">Actividad reciente</CardTitle>
       </CardHeader>
       <CardContent>
         {!actividad?.length ? (
           <EmptyState titulo="Sin actividad" descripcion="Aún no hay registros de auditoría." />
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700">
             {actividad.map((item) => (
               <li key={item.id} className="flex items-center justify-between py-3 text-sm">
                 <div>
-                  <p className="font-medium text-gray-900">{item.usuario}</p>
-                  <p className="text-gray-500">
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{item.usuario}</p>
+                  <p className="text-gray-500 dark:text-gray-400">
                     {item.accion} — {item.entidad}
                   </p>
                 </div>

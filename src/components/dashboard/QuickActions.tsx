@@ -7,7 +7,7 @@ export function QuickActions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Acciones rápidas</CardTitle>
+        <CardTitle className="text-lg dark:text-gray-100">Acciones rápidas</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <Link href="/docentes">

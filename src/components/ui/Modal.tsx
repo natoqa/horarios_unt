@@ -42,19 +42,19 @@ export function Modal({ open, onClose, title, description, children, size = 'md'
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="fixed inset-0 bg-black/50" onClick={onClose} />
         <div className={cn(
-          "relative z-50 w-full bg-white rounded-lg shadow-lg animate-in fade-in zoom-in",
+          "relative z-50 w-full bg-white rounded-lg shadow-lg animate-in fade-in zoom-in dark:bg-gray-800",
           sizes[size]
         )}>
-          <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center justify-between p-6 border-b dark:border-gray-700">
             <div>
-              {title && <h2 className="text-lg font-semibold">{title}</h2>}
-              {description && <p className="text-sm text-gray-500">{description}</p>}
+              {title && <h2 className="text-lg font-semibold dark:text-gray-100">{title}</h2>}
+              {description && <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>}
             </div>
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5 dark:text-gray-400" />
             </button>
           </div>
           <div className="p-6 max-h-[70vh] overflow-y-auto">

@@ -100,8 +100,8 @@ export default function AmbientesPage() {
         {/* Header */}
         <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Ambientes</h1>
-            <p className="text-gray-500 text-sm mt-1">Aulas de teoría y laboratorios</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Ambientes</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Aulas de teoría y laboratorios</p>
           </div>
           <Button onClick={() => setModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -118,19 +118,19 @@ export default function AmbientesPage() {
               placeholder="Buscar por nombre, código o ubicación..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 bg-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
           </div>
           <div className="flex gap-3">
-            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm">
+            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm dark:bg-gray-800 dark:border-gray-700">
               <DoorOpen className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-500">Ambientes:</span>
-              <span className="font-semibold text-gray-900">{filtrados.length}</span>
+              <span className="text-gray-500 dark:text-gray-400">Ambientes:</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{filtrados.length}</span>
             </div>
-            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm">
+            <div className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white border border-gray-200 text-sm dark:bg-gray-800 dark:border-gray-700">
               <Users className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-500">Capacidad:</span>
-              <span className="font-semibold text-gray-900">{totalCapacidad}</span>
+              <span className="text-gray-500 dark:text-gray-400">Capacidad:</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{totalCapacidad}</span>
             </div>
           </div>
         </div>
@@ -144,8 +144,8 @@ export default function AmbientesPage() {
           <EmptyState titulo="Sin ambientes" descripcion="Registre el primer ambiente." />
         ) : agrupados.length === 0 ? (
           <div className="text-center py-16">
-            <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No se encontraron ambientes para &quot;{busqueda}&quot;</p>
+            <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No se encontraron ambientes para &quot;{busqueda}&quot;</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -153,9 +153,9 @@ export default function AmbientesPage() {
               const config = tipoConfig[tipo]
               const Icon = config.icon
               return (
-                <div key={tipo} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div key={tipo} className="bg-white rounded-xl border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
                   {/* Header del grupo */}
-                  <div className={cn('px-5 py-3.5 border-b border-gray-100 flex items-center justify-between', config.headerBg)}>
+                  <div className={cn('px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between', config.headerBg)}>
                     <div className="flex items-center gap-3">
                       <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', config.iconBg)}>
                         <Icon className="h-4 w-4" />
@@ -173,34 +173,34 @@ export default function AmbientesPage() {
                   </div>
 
                   {/* Lista */}
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-gray-50 dark:divide-gray-700">
                     {items.map((a) => (
-                      <div key={a.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors group">
+                      <div key={a.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors group">
                         {/* Código */}
                         <span className="text-xs font-mono font-semibold text-gray-400 w-20 shrink-0">
                           {a.codigo}
                         </span>
 
                         {/* Nombre */}
-                        <span className="flex-1 text-sm font-medium text-gray-900 min-w-0 truncate">
+                        <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 truncate">
                           {a.nombre}
                         </span>
 
                         {/* Info */}
                         <div className="hidden sm:flex items-center gap-3">
                           {a.ubicacion && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500" title="Ubicación">
+                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Ubicación">
                               <MapPin className="h-3.5 w-3.5" />
                               <span className="max-w-[160px] truncate">{a.ubicacion}</span>
                             </div>
                           )}
                           {a.tiene_proyector && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500" title="Proyector">
+                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Proyector">
                               <Projector className="h-3.5 w-3.5" />
                             </div>
                           )}
                           {a.tiene_computadoras && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500" title="Computadoras">
+                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Computadoras">
                               <Monitor className="h-3.5 w-3.5" />
                             </div>
                           )}
@@ -219,7 +219,7 @@ export default function AmbientesPage() {
                               deleteMutation.mutate(a.id)
                             }
                           }}
-                          className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
                           title="Desactivar"
                         >
                           <Trash2 className="h-4 w-4" />
